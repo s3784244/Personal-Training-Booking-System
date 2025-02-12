@@ -41,7 +41,7 @@ export const getSingleTrainer = async (req, res) => {
   const id = req.params.id;
 
   try {
-    const trainer = await Trainer.findById(id).select("-password");
+    const trainer = await Trainer.findById(id).populate('reviews').select("-password");
 
     res.status(200).json({
       success: true,
