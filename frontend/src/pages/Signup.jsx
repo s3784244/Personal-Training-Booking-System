@@ -111,7 +111,7 @@ const Signup = () => {
               <div className="mb-5">
                 <input
                   type="password"
-                  placeholder="Ender your password"
+                  placeholder="Enter your password"
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}

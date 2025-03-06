@@ -1,3 +1,4 @@
+import BookingSchema from "../models/BookingSchema.js";
 import Trainer from "../models/TrainerSchema.js";
 
 export const updateTrainer = async (req, res) => {
@@ -80,3 +81,28 @@ export const getAllTrainer = async (req, res) => {
   }
 };
 
+export const getTrainerProfile = async (req, res) => {
+  const trainerId = req.userId;
+  
+    try {
+      const trainer = await Trainer.findById(trainerId);
+  
+      if(!trainer) {
+        return res
+          .status(404)
+          .json({success: false, message: "Trainer not found" });
+    }
+    const { password, ...rest } = trainer._doc;
+    const bookings = await BookingSchema.find({trainer: trainerId});
+
+    res.status(200).json({
+      success:true, 
+      message:'Getting profile info', 
+      data: {...rest, bookings}});
+  
+    } catch (err) {
+      res
+        .status(500)
+        .json({ success: false, message: "Something went wrong, cannot get" });
+    }
+};

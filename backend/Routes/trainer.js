@@ -4,6 +4,7 @@ import {
   deleteTrainer,
   getAllTrainer,
   getSingleTrainer,
+  getTrainerProfile
 } from "../Controllers/trainerController.js";
 import { authenticate, restrict } from "../auth/verifyToken.js";
 import reviewRouter from "./review.js";
@@ -17,5 +18,6 @@ router.get("/:id", getSingleTrainer);
 router.get("/", getAllTrainer);
 router.put("/:id", authenticate, restrict(['trainer']), updateTrainer);
 router.delete("/:id", authenticate, restrict(['trainer']), deleteTrainer);
+router.get("/profile/me", authenticate, restrict(['trainer']), getTrainerProfile);
 
 export default router;

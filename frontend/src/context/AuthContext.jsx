@@ -41,8 +41,10 @@ export const AuthContextProvider = ({ children }) => {
 
   useEffect(() => {
     localStorage.setItem("user", JSON.stringify(state.user));
-    localStorage.setItem("token", JSON.stringify(state.user));
-    localStorage.setItem("role", JSON.stringify(state.user));
+    localStorage.setItem("token", state.token);
+    localStorage.setItem("role", state.role);
+    console.log("AuthContext state updated:", state); // Add logging here
+
   }, [state]);
 
   return <authContext.Provider value={{ user:state.user, token:state.token, role:state.role, dispatch }}>
