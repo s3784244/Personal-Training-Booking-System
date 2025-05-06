@@ -1,7 +1,7 @@
 import useFetchData from "../../hooks/useFetchData";
 import { BASE_URL } from "../../config";
 import TrainerCard from "../../components/Trainers/TrainerCard";
-import Loading from "../../components/Loader/Loading";
+import Loading from "../../components/Loader/Loader";
 import Error from "../../components/Error/Error";
 
 const MyBookings = () => {
