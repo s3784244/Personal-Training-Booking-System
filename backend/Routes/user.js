@@ -1,3 +1,15 @@
+/**
+ * Handles operations related to clients (users).
+ *
+ * Endpoints:
+ * - GET /:id: Fetches a single user's details.
+ * - GET /:     Fetches all users (admin-only).
+ * - PUT /:id: Updates a user's details.
+ * - DELETE /:id: Deletes a user.
+ * - GET /profile/me: Fetches the logged-in user's profile.
+ * - GET /bookings/my-bookings: Fetches the logged-in user's bookings.
+ */
+
 import express from "express";
 import {
   updateUser,

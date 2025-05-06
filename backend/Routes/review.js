@@ -1,3 +1,11 @@
+/**
+ * Handles operations related to reviews.
+ *
+ * Endpoints:
+ * - GET /:     Fetches all reviews.
+ * - POST /:    Creates a new review (clients only).
+ */
+
 import express from "express";
 import { 
   getAllReviews, 

@@ -1,3 +1,15 @@
+/**
+ * Controllers folder contains the logic for handling API requests. 
+ * Each controller function corresponds to an endpoint in the Routes/ 
+ * folder.
+ * 
+ * Handles review-related operations.
+ *
+ * Functions:
+ * - getAllReviews: Fetches all reviews.
+ * - createReview: Creates a new review for a trainer.
+ */
+
 import Review from "../models/ReviewSchema.js";
 import Trainer from "../models/TrainerSchema.js";
 

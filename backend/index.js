@@ -1,3 +1,14 @@
+/**
+ * Entry point of the backend application.
+ *
+ * Responsibilities:
+ * - Sets up the Express server.
+ * - Connects to the MongoDB database using Mongoose.
+ * - Configures middleware: express.json, cookie-parser, and cors.
+ * - Defines API routes for authentication, users, trainers, and reviews.
+ * - Starts the server on the specified port.
+ */
+
 import express from "express"
 import cookieParser from "cookie-parser"
 import cors from 'cors'
@@ -22,15 +33,13 @@ const corsOptions = {
 mongoose.set('strictQuery', false)
 const connectDB = async() => {
   try {
-    await mongoose.connect(process.env.MONGO_URL, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,  
-    })
-
-    console.log('mongodb database is connected')
+    await mongoose.connect(process.env.MONGO_URL)
+      // useNewUrlParser: true,
+      // useUnifiedTopology: true,  
+      console.log('mongodb database is connected')
 
   } catch (err) {
-    console.log('mongo database connection failed')
+    console.log('mongo database connection failed', err)
     
   }
 }

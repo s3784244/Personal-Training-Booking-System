@@ -1,3 +1,17 @@
+/**
+ * Handles operations related to trainers.
+ *
+ * Endpoints:
+ * - GET /:id: Fetches a single trainer's details.
+ * - GET /:     Fetches all trainers.
+ * - PUT /:id: Updates a trainer's details.
+ * - DELETE /:id: Deletes a trainer.
+ * - GET /profile/me: Fetches the logged-in trainer's profile.
+ *
+ * Nested Route:
+ * - /reviews: Handles reviews related to a specific trainer.
+ */
+
 import express from "express";
 import {
   updateTrainer,
