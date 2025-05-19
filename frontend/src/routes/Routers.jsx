@@ -11,6 +11,7 @@ import MyAccount from '../Dashboard/user-account/MyAccount'
 import Dashboard from '../Dashboard/trainer-account/Dashboard'
 import {Routes, Route} from 'react-router-dom'
 import ProtectedRoutes from './ProtectedRoutes.jsx'
+import CheckoutSuccess from '../pages/Trainer/CheckoutSuccess.jsx'
 
 const Routers = () => {
   return (
@@ -23,6 +24,7 @@ const Routers = () => {
       <Route path="/register" element={<Signup/>} />
       <Route path="/contact" element={<Contact/>} />
       <Route path="/services" element={<Services/>} />
+      <Route path="/checkout-success" element={<CheckoutSuccess/>} />
       <Route path="/users/profile/me" element={<ProtectedRoutes allowedRoles={['client']}> <MyAccount/> </ProtectedRoutes>} />
       <Route path="/trainers/profile/me" element={ <ProtectedRoutes allowedRoles={['trainer']}><Dashboard/></ProtectedRoutes>} />
     </Routes>
