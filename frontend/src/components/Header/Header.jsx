@@ -79,28 +79,45 @@ const Header = () => {
 
           {/* ------ nav right ------ */}
           <div className="flex items-center gap-4">
-            {
-              token && user ? 
-              <div>
-                <Link to={`${role==='trainer' ? '/trainers/profile/me' : '/users/profile/me'}`}>
-                  <figure className="w-[35px] h-[35px] rounded-full cursor-pointer">
-                    <img 
-                      src={user?.photo} 
-                      className="w-full rounded-full" 
-                      alt="" 
-                    />
-                  </figure>
+            {token && user ? (
+              <>
+                <div>
+                  <Link to={`${role === 'trainer' ? '/trainers/profile/me' : '/users/profile/me'}`}>
+                    <figure className="w-[35px] h-[35px] rounded-full cursor-pointer">
+                      <img 
+                        src={user?.photo} 
+                        className="w-full rounded-full" 
+                        alt="" 
+                      />
+                    </figure>
+                  </Link>
+                </div>
+                <button
+                  onClick={() => {
+                    // You may want to move this to a handler function
+                    localStorage.removeItem("user");
+                    localStorage.removeItem("token");
+                    window.location.href = "/login";
+                  }}
+                  className="bg-red-500 py-2 px-6 text-white font-[600] h-[44px] flex items-center justify-center rounded-[50px]"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <Link to='/login'>
+                  <button className="bg-primaryColor py-2 px-6 text-white font-[600] h-[44px] flex items-center justify-center rounded-[50px]">
+                    Login
+                  </button>
                 </Link>
-              </div> :
-              <Link to='/login'>
-               <button className="bg-primaryColor py-2 px-6 text-white font-[600] h-[44px] flex items-center justify-center rounded-[50px]">
-                 Login
-               </button> 
-             </Link>
-            }
-            
-           
-
+                <Link to='/register'>
+                  <button className="bg-orange-400 py-2 px-6 text-white font-[600] h-[44px] flex items-center justify-center rounded-[50px]">
+                    Sign Up
+                  </button>
+                </Link>
+              </>
+            )}
             <span className="md:hidden" onClick={toggleMenu}>
               <BiMenu className="w-6 h-6 cursor-pointer" />
             </span>

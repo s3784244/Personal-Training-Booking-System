@@ -39,7 +39,9 @@ const Home = () => {
                     fugit, perspiciatis cum nemo aperiam, aut quia earum amet architecto, modi 
                     odio. Soluta unde ducimus perferendis?
                   </p>
-                  <button className="btn">Request an Consultation</button>
+                  <Link to="/trainers">
+                    <button className="btn">Request an Consultation</button>
+                  </Link>
                 </div>
                 {/* ------ hero counter ------ */}
                 <div className="mt-[30px] lg:mt-[70px] flex flex-col lg:flex-row lg:items-center gap-5 lg:gap-[30px]">
