@@ -7,6 +7,9 @@ export const authenticate = async (req, res, next) => {
   // Get token from headers
   const authToken = req.headers.authorization;
 
+  console.log("Auth Header:", authToken); // Debug line
+
+
   // Check if token exists
   if (!authToken || !authToken.startsWith("Bearer ")) {
     return res
@@ -17,9 +20,10 @@ export const authenticate = async (req, res, next) => {
   try {
     // Extract the token from the "Bearer " prefix
     const token = authToken.split(" ")[1];
-
+    console.log("Extracted Token:", token); // Debug line
      // Verify the token using the secret key
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+    console.log("Decoded Token:", decoded); // Debug line
 
     // Attach the user ID and role to the request object
     req.userId = decoded.id;
@@ -29,6 +33,8 @@ export const authenticate = async (req, res, next) => {
     next();
   } catch (err) {
     // Handle token expiration error
+    console.error("Token verification error:", err); // Debug line
+
     if(err.name === 'TokenExpiredError') {
       return res.status(401).json({message: 'Token expired'})
     }

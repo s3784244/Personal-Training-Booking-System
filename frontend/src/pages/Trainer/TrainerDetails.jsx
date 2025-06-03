@@ -57,7 +57,7 @@ const TrainerDetails = () => {
                 </h3>
                 <div className="flex items-center gap-[6px]">
                   <span className="flex items-center gap-[6px] text-[14px] leading-5 lg:text-[16px] lg:leading-7 font-semibold text-headingColor">
-                    <img src={starIcon} alt="" /> {averageRating}
+                    <img src={starIcon} alt="" /> {Number(averageRating).toFixed(1)}
                   </span>
                   <span className="text-[14px] leading-5 lg:text-[16px] lg:leading-7 font-[400] text-textColor">
                     ({totalRating})

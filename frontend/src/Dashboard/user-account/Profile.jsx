@@ -49,6 +49,9 @@ const Profile = ({user}) => {
     setLoading(true);
 
     try {
+      // Get token from localStorage dynamically
+      const token = localStorage.getItem('token');
+      
       const res = await fetch(`${BASE_URL}users/${user._id}`,{
         method: 'put',
         headers: {

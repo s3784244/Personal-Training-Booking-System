@@ -1,5 +1,5 @@
 import {useEffect, useRef, useContext} from "react";
-// import logo from "../../assets/images/logo.png";
+import logo from "../../assets/images/trainerhub-logo.png"; 
 import { NavLink, Link } from "react-router-dom";
 import { BiMenu } from "react-icons/bi"
 import { authContext } from "../../context/AuthContext";
@@ -53,8 +53,9 @@ const Header = () => {
         <div className="flex items-center justify-between">
           {/* ===== logo ===== */}
           <div>
-            {/* <img src={logo} alt="Logo" /> */}
-            <div>LOGO HERE</div>
+            <Link to="/">
+              <img src={logo} alt="TrainerHub" className="w-56 h-auto" />
+            </Link>
           </div>
 
           {/* ===== menu ===== */}
@@ -92,6 +93,13 @@ const Header = () => {
                     </figure>
                   </Link>
                 </div>
+
+                <Link to={`${role === 'trainer' ? '/trainers/profile/me' : '/users/profile/me'}`}>
+                  <button className="bg-blue-200 hover:bg-blue-300 py-2 px-6 text-primaryColor font-[600] h-[44px] flex items-center justify-center rounded-[50px]">
+                    My Profile
+                  </button>
+                </Link>
+      
                 <button
                   onClick={() => {
                     // You may want to move this to a handler function

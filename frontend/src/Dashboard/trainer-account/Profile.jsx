@@ -61,7 +61,10 @@ const Profile = ({trainerData}) => {
   const updateProfileHandler = async e => {
     e.preventDefault();
   
-    try {
+  try {
+      // Get token from localStorage dynamically
+      const token = localStorage.getItem('token');
+      
       const res = await fetch(`${BASE_URL}trainers/${trainerData._id}`, {
         method: "PUT",
         headers: {
