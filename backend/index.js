@@ -26,9 +26,17 @@ dotenv.config()
 const app = express()
 const port = process.env.PORT || 8000
 
+// const corsOptions = {
+//   origin: true
+// }
 const corsOptions = {
-  origin: true
+  origin: process.env.NODE_ENV === 'production' 
+    ? true  // Allow same origin in production
+    : ['http://localhost:5173'],
+  credentials: true
 }
+
+app.use(cors(corsOptions));
 
 // database connection
 mongoose.set('strictQuery', false)

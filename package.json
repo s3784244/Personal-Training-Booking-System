@@ -1,0 +1,7 @@
+{
+  "name": "personal-training-booking-system",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "cd frontend && npm install && npm run build"
+  }
+}
