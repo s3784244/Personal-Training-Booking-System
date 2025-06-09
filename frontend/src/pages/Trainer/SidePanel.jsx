@@ -1,12 +1,15 @@
 import React from 'react';
 import convertTime from '../../utils/convertTime';
-import { BASE_URL, token } from './../../config';
+import { BASE_URL } from './../../config'; // Remove token import
 import { toast } from 'react-toastify';
 
 const SidePanel = ({trainerId, ticketPrice, timeSlots}) => {
 
   const bookingHandler = async () => {
     try {
+      // Get token from localStorage dynamically
+      const token = localStorage.getItem('token');
+      
       const res = await fetch(`${BASE_URL}bookings/checkout-session/${trainerId}`, {
         method: 'post',
         headers: {
@@ -24,7 +27,6 @@ const SidePanel = ({trainerId, ticketPrice, timeSlots}) => {
         window.location.href = data.session.url
       }
     } catch (err) {
-      // Handle error here
       toast.error(err.message)
     }
   }
@@ -51,10 +53,9 @@ const SidePanel = ({trainerId, ticketPrice, timeSlots}) => {
             </p>
           </li>
           ))}
-          
-          
         </ul>
       </div>
+
       <button onClick={bookingHandler} className='btn mx-2 w-full rounded-md'>Book Session</button>
     </div>
   );
