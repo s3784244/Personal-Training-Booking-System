@@ -2,6 +2,9 @@
   "name": "personal-training-booking-system",
   "version": "1.0.0",
   "scripts": {
-    "build": "cd frontend && npm install && npm run build"
+    "build": "cd frontend && npm ci && npm run build"
+  },
+  "engines": {
+    "node": "18.x"
   }
 }
