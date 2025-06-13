@@ -1,13 +1,29 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import convertTime from '../../utils/convertTime';
-import { BASE_URL } from './../../config'; // Remove token import
+import { BASE_URL } from './../../config';
 import { toast } from 'react-toastify';
+import { authContext } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+
 
 const SidePanel = ({trainerId, ticketPrice, timeSlots}) => {
-
+  const { role, user, token } = useContext(authContext);
+  const navigate = useNavigate();
+  
   const bookingHandler = async () => {
+    // Check if user is not logged in (no token)
+    if (!token) {
+      toast.info('Please login to book a session');
+      navigate('/login');
+      return;
+    }
+
+    if (role === 'trainer') {
+      toast.error('Trainers cannot book sessions');
+      return;
+    }
+
     try {
-      // Get token from localStorage dynamically
       const token = localStorage.getItem('token');
       
       const res = await fetch(`${BASE_URL}bookings/checkout-session/${trainerId}`, {
@@ -30,6 +46,20 @@ const SidePanel = ({trainerId, ticketPrice, timeSlots}) => {
       toast.error(err.message)
     }
   }
+
+  // Helper function to safely convert time
+  const safeConvertTime = (time) => {
+    if (!time || time === '') return 'Not set';
+    try {
+      return convertTime(time);
+    } catch (error) {
+      return 'Invalid time';
+    }
+  };
+
+  const isTrainer = role === 'trainer';
+  const isSameTrainer = user?._id === trainerId;
+  const shouldDisableButton = isTrainer || isSameTrainer;
   
   return (
     <div className="shadow-panelShadow p-3 lg:p-5 rounded-md">
@@ -45,18 +75,41 @@ const SidePanel = ({trainerId, ticketPrice, timeSlots}) => {
         <ul className="mt-3">
           {timeSlots?.map((item, index) => (
             <li key={index} className="flex items-center justify-between mb-2">
-            <p className="text-[15px] leading-6 text-textColor font-semibold">
-              {item.day.charAt(0).toUpperCase() + item.day.slice(1)}
-            </p>
-            <p className="text-[15px] leading-6 text-textColor font-semibold">
-              {convertTime(item.startingTime)} - {convertTime(item.endingTime)}
-            </p>
-          </li>
+              <p className="text-[15px] leading-6 text-textColor font-semibold">
+                {item.day ? item.day.charAt(0).toUpperCase() + item.day.slice(1) : 'Not set'}
+              </p>
+              <p className="text-[15px] leading-6 text-textColor font-semibold">
+                {safeConvertTime(item.startingTime)} - {safeConvertTime(item.endingTime)}
+              </p>
+            </li>
           ))}
         </ul>
+        {(!timeSlots || timeSlots.length === 0) && (
+          <p className="text-gray-500 text-sm">No time slots available</p>
+        )}
       </div>
 
-      <button onClick={bookingHandler} className='btn mx-2 w-full rounded-md'>Book Session</button>
+      {/* Conditional button rendering */}
+      {shouldDisableButton ? (
+        <div className="text-center mt-4">
+          <p className="text-gray-500 text-sm mb-2">
+            {isTrainer ? "Trainers cannot book sessions" : "You cannot book your own session"}
+          </p>
+          <button 
+            disabled 
+            className="btn mx-2 w-full rounded-md bg-gray-400 cursor-not-allowed opacity-50"
+          >
+            Book Session
+          </button>
+        </div>
+      ) : (
+        <button 
+          onClick={bookingHandler} 
+          className='btn mx-2 w-full rounded-md hover:bg-blue-600 transition-colors'
+        >
+          Book Session      
+        </button>
+      )}
     </div>
   );
 };

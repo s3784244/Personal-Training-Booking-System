@@ -7,16 +7,51 @@ import useGetProfile from "../../hooks/useFetchData";
 import { BASE_URL } from "../../config";
 import Loading from "../../components/Loader/Loader";
 import Error from "../../components/Error/Error";
+import { toast } from "react-toastify"; // ADD THIS IMPORT
+import { useNavigate } from "react-router-dom"; // ADD THIS IMPORT
 
 const MyAccount = () => {
-
   const { dispatch } = useContext(authContext);
   const [tab, setTab] = useState("bookings");
+  const navigate = useNavigate(); // ADD THIS LINE
 
   const {data:userData, loading, error} = useGetProfile(`${BASE_URL}users/profile/me`);
   
   const handleLogout = () => {
     dispatch({ type: "LOGOUT" });
+  }
+
+  // ADD THIS FUNCTION
+  const handleDeleteAccount = async () => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete your account? This action cannot be undone."
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      
+      const res = await fetch(`${BASE_URL}users/${userData._id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        throw new Error(result.message);
+      }
+
+      toast.success("Account deleted successfully");
+      dispatch({ type: "LOGOUT" });
+      navigate('/');
+    } catch (err) {
+      toast.error(err.message || "Failed to delete account");
+    }
   }
 
   return (
@@ -51,7 +86,11 @@ const MyAccount = () => {
                 <button onClick={handleLogout} className="w-full bg-[#181A1E] p-3 text-[16px] leading-7 rounded-md text-white">
                   Logout
                 </button>
-                <button className="w-full bg-red-600 mt-4 p-3 text-[16px] leading-7 rounded-md text-white">
+                {/* UPDATE THIS LINE - ADD onClick={handleDeleteAccount} */}
+                <button 
+                  onClick={handleDeleteAccount} 
+                  className="w-full bg-red-600 mt-4 p-3 text-[16px] leading-7 rounded-md text-white hover:bg-red-700 transition-colors"
+                >
                   Delete account
                 </button>
               </div>

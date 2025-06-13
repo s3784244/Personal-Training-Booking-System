@@ -416,7 +416,7 @@ const Profile = ({trainerData}) => {
                   <div>
                     <p className="form__label">Ending Time*</p>
                     <input
-                      type="date"
+                      type="time"
                       name="endingTime"
                       value={item.endingTime}
                       className="form__input"
