@@ -1,17 +1,18 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import convertTime from '../../utils/convertTime';
 import { BASE_URL } from './../../config';
 import { toast } from 'react-toastify';
 import { authContext } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
-
 const SidePanel = ({trainerId, ticketPrice, timeSlots}) => {
   const { role, user, token } = useContext(authContext);
   const navigate = useNavigate();
+  const [isBooking, setIsBooking] = useState(false); // Add loading state
   
   const bookingHandler = async () => {
-    // Check if user is not logged in (no token)
+    if (isBooking) return; // Prevent multiple clicks
+    
     if (!token) {
       toast.info('Please login to book a session');
       navigate('/login');
@@ -22,6 +23,8 @@ const SidePanel = ({trainerId, ticketPrice, timeSlots}) => {
       toast.error('Trainers cannot book sessions');
       return;
     }
+
+    setIsBooking(true); // Set loading state
 
     try {
       const token = localStorage.getItem('token');
@@ -44,6 +47,7 @@ const SidePanel = ({trainerId, ticketPrice, timeSlots}) => {
       }
     } catch (err) {
       toast.error(err.message)
+      setIsBooking(false); // Reset loading state on error
     }
   }
 
@@ -57,9 +61,20 @@ const SidePanel = ({trainerId, ticketPrice, timeSlots}) => {
     }
   };
 
+  // Enhanced validation logic
   const isTrainer = role === 'trainer';
   const isSameTrainer = user?._id === trainerId;
-  const shouldDisableButton = isTrainer || isSameTrainer;
+  const hasNoTimeSlots = !timeSlots || timeSlots.length === 0;
+  const shouldDisableButton = isTrainer || isSameTrainer || hasNoTimeSlots || isBooking;
+
+  // Helper function to get the disable reason
+  const getDisableReason = () => {
+    if (isBooking) return "Processing booking...";
+    if (isTrainer) return "Trainers cannot book sessions";
+    if (isSameTrainer) return "You cannot book your own session";
+    if (hasNoTimeSlots) return "No available time slots";
+    return "";
+  };
   
   return (
     <div className="shadow-panelShadow p-3 lg:p-5 rounded-md">
@@ -84,30 +99,35 @@ const SidePanel = ({trainerId, ticketPrice, timeSlots}) => {
             </li>
           ))}
         </ul>
-        {(!timeSlots || timeSlots.length === 0) && (
-          <p className="text-gray-500 text-sm">No time slots available</p>
+        {hasNoTimeSlots && (
+          <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+            <p className="text-yellow-700 text-sm font-medium">
+              ⚠️ No time slots available for booking
+            </p>
+          </div>
         )}
       </div>
 
-      {/* Conditional button rendering */}
+      {/* Enhanced conditional button rendering */}
       {shouldDisableButton ? (
         <div className="text-center mt-4">
           <p className="text-gray-500 text-sm mb-2">
-            {isTrainer ? "Trainers cannot book sessions" : "You cannot book your own session"}
+            {getDisableReason()}
           </p>
           <button 
             disabled 
             className="btn mx-2 w-full rounded-md bg-gray-400 cursor-not-allowed opacity-50"
           >
-            Book Session
+            {isBooking ? 'Processing...' : 'Book Session'}
           </button>
         </div>
       ) : (
         <button 
           onClick={bookingHandler} 
           className='btn mx-2 w-full rounded-md hover:bg-blue-600 transition-colors'
+          disabled={isBooking}
         >
-          Book Session      
+          {isBooking ? 'Processing...' : 'Book Session'}
         </button>
       )}
     </div>

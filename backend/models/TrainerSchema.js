@@ -33,10 +33,12 @@ const TrainerSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  // TEMPORAILY DISABLED APPROVAL SYSTEM
   isApproved: {
     type: String,
     enum: ["pending", "approved", "cancelled"],
-    default: "pending",
+    // default: "pending",
+    default: "approved",
   },
   bookings: [{ type: mongoose.Types.ObjectId, ref: "Booking" }],
 });

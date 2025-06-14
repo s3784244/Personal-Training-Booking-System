@@ -201,9 +201,9 @@ const Profile = ({trainerData}) => {
             onChange={handleInputChange}
             placeholder="Phone number"
             className="form__input"
-            readOnly
-            aria-readonly
-            disabled='true'
+            // readOnly
+            // aria-readonly
+            // disabled='true'
           />
         </div>
         <div className="mb-5">

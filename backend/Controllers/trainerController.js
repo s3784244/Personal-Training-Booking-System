@@ -82,15 +82,18 @@ export const getAllTrainer = async (req, res) => {
     // If a search query is provided, filter trainers by name or specialization
     if (query) {
       trainers = await Trainer.find({
-        isApproved: 'approved',
+        // COMMENTED OUT: Remove approval filtering
+        // isApproved: 'approved',
         $or: [
           { name: { $regex: query, $options: 'i' } },
           { specialization: { $regex: query, $options: 'i' } }
         ],
       }).select("-password");
     } else {
-      // Otherwise, return all approved trainers
-      trainers = await Trainer.find({ isApproved: 'approved' }).select("-password");
+      // Otherwise, return all trainers (REMOVED APPROVAL FILTERING)
+      trainers = await Trainer.find({}).select("-password");
+      // COMMENTED OUT: Remove approval filtering
+      // trainers = await Trainer.find({ isApproved: 'approved' }).select("-password");
     }
 
     res.status(200).json({
