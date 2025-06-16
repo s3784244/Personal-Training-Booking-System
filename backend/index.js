@@ -27,7 +27,13 @@ const app = express()
 const port = process.env.PORT || 8000
 
 const corsOptions = {
-  origin: true
+  origin: process.env.NODE_ENV === 'production' 
+    ? [
+        'https://personal-trainer-booking.vercel.app', 
+        'https://personal-trainer-booking-api.vercel.app'
+      ] 
+    : true,
+  credentials: true
 }
 
 // IMPORTANT: Handle Stripe webhook BEFORE express.json() middleware
