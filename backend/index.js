@@ -26,7 +26,7 @@ dotenv.config()
 const app = express()
 const port = process.env.PORT || 8000
 
-// CORS configuration for production
+// CORS configuration
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
     ? [
@@ -47,38 +47,38 @@ app.use(cors(corsOptions))
 app.use(express.json())
 app.use(cookieParser())
 
-// MongoDB connection for serverless
-let cachedDb = null;
+// MongoDB connection - simplified for serverless
+let isConnected = false;
 
 const connectDB = async () => {
-  if (cachedDb) {
-    return cachedDb;
+  if (isConnected && mongoose.connection.readyState === 1) {
+    return;
   }
 
   try {
-    const opts = {
-      bufferCommands: false,
-      bufferMaxEntries: 0,
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    };
-
-    cachedDb = await mongoose.connect(process.env.MONGO_URL, opts);
+    if (mongoose.connection.readyState === 0) {
+      await mongoose.connect(process.env.MONGO_URL, {
+        bufferCommands: false,
+        bufferMaxEntries: 0,
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+      });
+    }
+    isConnected = true;
     console.log('MongoDB connected');
-    return cachedDb;
   } catch (err) {
     console.error('MongoDB connection error:', err);
     throw err;
   }
 };
 
-// Connect to database for each request (serverless requirement)
+// Connect to database middleware
 app.use(async (req, res, next) => {
   try {
     await connectDB();
     next();
   } catch (error) {
-    console.error('Database connection failed:', error);
+    console.error('Database connection failed in middleware:', error);
     return res.status(500).json({ 
       success: false, 
       message: 'Database connection failed',
@@ -87,25 +87,13 @@ app.use(async (req, res, next) => {
   }
 });
 
-// Routes
-app.use('/api/v1/auth', authRoute)
-app.use('/api/v1/users', userRoute)
-app.use('/api/v1/trainers', trainerRoute)
-app.use('/api/v1/reviews', reviewRoute)
-app.use('/api/v1/bookings', bookingRoute)
-
 // Root route
 app.get('/', (req, res) => {
   res.json({ 
     message: 'Personal Training Booking API is working!', 
     timestamp: new Date().toISOString(),
-    routes: [
-      '/api/v1/auth',
-      '/api/v1/users', 
-      '/api/v1/trainers',
-      '/api/v1/reviews',
-      '/api/v1/bookings'
-    ]
+    environment: process.env.NODE_ENV || 'development',
+    database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
   })
 })
 
@@ -114,14 +102,54 @@ app.get('/health', (req, res) => {
   res.json({ 
     status: 'healthy', 
     database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    mongoUrl: process.env.MONGO_URL ? 'configured' : 'missing'
   })
 })
 
-// Test route for trainers
+// Test route
 app.get('/api/v1/test', (req, res) => {
-  res.json({ message: 'API routes are working!', timestamp: new Date().toISOString() });
+  res.json({ 
+    message: 'API routes are working!', 
+    timestamp: new Date().toISOString(),
+    database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+  });
 });
+
+// Debug route to test database
+app.get('/api/v1/debug/trainers', async (req, res) => {
+  try {
+    await connectDB();
+    
+    // Dynamic import for serverless
+    const { default: Trainer } = await import('./models/TrainerSchema.js');
+    
+    const count = await Trainer.countDocuments();
+    const trainers = await Trainer.find({}).limit(3).select('name email specialization');
+    
+    res.json({
+      success: true,
+      message: 'Database connection working',
+      trainersCount: count,
+      sampleTrainers: trainers,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Database test failed',
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+});
+
+// API Routes
+app.use('/api/v1/auth', authRoute)
+app.use('/api/v1/users', userRoute)
+app.use('/api/v1/trainers', trainerRoute)
+app.use('/api/v1/reviews', reviewRoute)
+app.use('/api/v1/bookings', bookingRoute)
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -139,6 +167,10 @@ app.use('*', (req, res) => {
     success: false,
     message: `Route ${req.originalUrl} not found`,
     availableRoutes: [
+      '/',
+      '/health',
+      '/api/v1/test',
+      '/api/v1/debug/trainers',
       '/api/v1/auth',
       '/api/v1/users', 
       '/api/v1/trainers',

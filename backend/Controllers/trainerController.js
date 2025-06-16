@@ -113,35 +113,40 @@ export const getSingleTrainer = async (req, res) => {
  */
 export const getAllTrainer = async (req, res) => {
   try {
-    const { query } = req.query; // Extract search query from URL parameters
+    // Dynamic import for serverless compatibility
+    const { default: Trainer } = await import('../models/TrainerSchema.js');
+    
+    const { query } = req.query;
     let trainers;
 
-    // Handle search functionality
+    console.log('Getting trainers, query:', query);
+
     if (query) {
-      // Search trainers by name OR specialization (case-insensitive)
       trainers = await Trainer.find({
-        // COMMENTED OUT: Remove approval filtering for development
-        // isApproved: 'approved',
         $or: [
-          { name: { $regex: query, $options: 'i' } }, // Search in name field
-          { specialization: { $regex: query, $options: 'i' } } // Search in specialization field
+          { name: { $regex: query, $options: 'i' } },
+          { specialization: { $regex: query, $options: 'i' } }
         ],
-      }).select("-password"); // Exclude password from results
+      }).select("-password");
     } else {
-      // Return all trainers if no search query
       trainers = await Trainer.find({}).select("-password");
-      // COMMENTED OUT: In production, you might want to only show approved trainers
-      // trainers = await Trainer.find({ isApproved: 'approved' }).select("-password");
     }
+
+    console.log('Found trainers:', trainers.length);
 
     res.status(200).json({
       success: true,
       message: "Trainers found",
       data: trainers,
+      count: trainers.length
     });
   } catch (err) {
-    // Handle database errors
-    res.status(404).json({ success: false, message: "Not found" });
+    console.error('Error in getAllTrainer:', err);
+    res.status(500).json({ 
+      success: false, 
+      message: "Error fetching trainers",
+      error: err.message 
+    });
   }
 };
 
