@@ -26,7 +26,7 @@ dotenv.config()
 const app = express()
 const port = process.env.PORT || 8000
 
-// Updated CORS configuration for production
+// CORS configuration for production
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
     ? [
@@ -39,46 +39,52 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization']
 }
 
-// IMPORTANT: Handle Stripe webhook BEFORE express.json() middleware
+// Handle Stripe webhook BEFORE express.json() middleware
 app.use('/api/v1/bookings/webhook', express.raw({type: 'application/json'}))
 
-// Connect to MongoDB
-let isConnected = false;
-
-const connectDB = async () => {
-  if (isConnected) return;
-  
-  try {
-    await mongoose.connect(process.env.MONGO_URL, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    isConnected = true;
-    console.log('MongoDB database is connected');
-  } catch (err) {
-    console.log('MongoDB database connection failed:', err);
-    throw err;
-  }
-}
-
-// middleware
+// Middleware
 app.use(cors(corsOptions))
 app.use(express.json())
 app.use(cookieParser())
 
-// Connect to database before handling requests
-app.use(async (req, res, next) => {
-  if (!isConnected) {
-    try {
-      await connectDB();
-    } catch (error) {
-      return res.status(500).json({ 
-        success: false, 
-        message: 'Database connection failed' 
-      });
-    }
+// MongoDB connection for serverless
+let cachedDb = null;
+
+const connectDB = async () => {
+  if (cachedDb) {
+    return cachedDb;
   }
-  next();
+
+  try {
+    const opts = {
+      bufferCommands: false,
+      bufferMaxEntries: 0,
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    };
+
+    cachedDb = await mongoose.connect(process.env.MONGO_URL, opts);
+    console.log('MongoDB connected');
+    return cachedDb;
+  } catch (err) {
+    console.error('MongoDB connection error:', err);
+    throw err;
+  }
+};
+
+// Connect to database for each request (serverless requirement)
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    console.error('Database connection failed:', error);
+    return res.status(500).json({ 
+      success: false, 
+      message: 'Database connection failed',
+      error: error.message 
+    });
+  }
 });
 
 // Routes
@@ -90,17 +96,32 @@ app.use('/api/v1/bookings', bookingRoute)
 
 // Root route
 app.get('/', (req, res) => {
-  res.json({ message: 'API is working', timestamp: new Date().toISOString() })
+  res.json({ 
+    message: 'Personal Training Booking API is working!', 
+    timestamp: new Date().toISOString(),
+    routes: [
+      '/api/v1/auth',
+      '/api/v1/users', 
+      '/api/v1/trainers',
+      '/api/v1/reviews',
+      '/api/v1/bookings'
+    ]
+  })
 })
 
 // Health check route
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'healthy', 
-    database: isConnected ? 'connected' : 'disconnected',
+    database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
     timestamp: new Date().toISOString()
   })
 })
+
+// Test route for trainers
+app.get('/api/v1/test', (req, res) => {
+  res.json({ message: 'API routes are working!', timestamp: new Date().toISOString() });
+});
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -108,14 +129,29 @@ app.use((err, req, res, next) => {
   res.status(500).json({
     success: false,
     message: 'Internal server error',
-    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    error: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
   });
 });
 
-// For Vercel deployment
+// 404 handler
+app.use('*', (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `Route ${req.originalUrl} not found`,
+    availableRoutes: [
+      '/api/v1/auth',
+      '/api/v1/users', 
+      '/api/v1/trainers',
+      '/api/v1/reviews',
+      '/api/v1/bookings'
+    ]
+  });
+});
+
+// For local development
 if (process.env.NODE_ENV !== 'production') {
-  app.listen(port, () => {
-    connectDB();
+  app.listen(port, async () => {
+    await connectDB();
     console.log('Server is running on port ' + port);
   });
 }
