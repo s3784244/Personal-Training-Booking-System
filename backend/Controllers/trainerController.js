@@ -90,14 +90,18 @@ export const getSingleTrainer = async (req, res) => {
     // .select("-password") excludes password field from response
     const trainer = await Trainer.findById(id).populate('reviews').select("-password");
 
+    if (!trainer) {
+      return res.status(404).json({ success: false, message: "Trainer not found" });
+    }
+
     res.status(200).json({
       success: true,
       message: "Trainer found",
       data: trainer,
     });
   } catch (err) {
-    // Handle case where trainer doesn't exist
-    res.status(404).json({ success: false, message: "No trainer found" });
+    console.error('❌ Error in getSingleTrainer:', err);
+    res.status(500).json({ success: false, message: "Error fetching trainer" });
   }
 };
 
@@ -113,42 +117,42 @@ export const getSingleTrainer = async (req, res) => {
  */
 export const getAllTrainer = async (req, res) => {
   try {
-    // Dynamic import for serverless compatibility
-    const { default: Trainer } = await import('../models/TrainerSchema.js');
+    console.log('🔍 getAllTrainer called')
+    console.log('Query params:', req.query)
     
-    const { query } = req.query;
-    let trainers;
+    const { query } = req.query
+    let trainers
 
-    console.log('Getting trainers, query:', query);
-
-    if (query) {
+    if (query && query.trim() !== '' && query !== 'undefined') {
+      console.log('🔎 Searching with query:', query)
       trainers = await Trainer.find({
         $or: [
           { name: { $regex: query, $options: 'i' } },
           { specialization: { $regex: query, $options: 'i' } }
         ],
-      }).select("-password");
+      }).select("-password")
     } else {
-      trainers = await Trainer.find({}).select("-password");
+      console.log('📋 Getting all trainers')
+      trainers = await Trainer.find({}).select("-password")
     }
 
-    console.log('Found trainers:', trainers.length);
+    console.log('✅ Found trainers:', trainers.length)
 
     res.status(200).json({
       success: true,
       message: "Trainers found",
       data: trainers,
       count: trainers.length
-    });
+    })
   } catch (err) {
-    console.error('Error in getAllTrainer:', err);
+    console.error('❌ Error in getAllTrainer:', err)
     res.status(500).json({ 
       success: false, 
       message: "Error fetching trainers",
       error: err.message 
-    });
+    })
   }
-};
+}
 
 /**
  * Get Trainer Profile (Private Dashboard View)
