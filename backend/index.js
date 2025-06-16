@@ -26,34 +26,60 @@ dotenv.config()
 const app = express()
 const port = process.env.PORT || 8000
 
+// Updated CORS configuration for production
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
     ? [
-        'https://personal-trainer-booking.vercel.app', 
+        'https://personal-trainer-booking.vercel.app',
         'https://personal-trainer-booking-api.vercel.app'
       ] 
-    : true,
-  credentials: true
+    : ['http://localhost:5173', 'http://localhost:5000'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }
 
 // IMPORTANT: Handle Stripe webhook BEFORE express.json() middleware
 app.use('/api/v1/bookings/webhook', express.raw({type: 'application/json'}))
 
-// database connection
-mongoose.set('strictQuery', false)
-const connectDB = async() => {
+// Connect to MongoDB
+let isConnected = false;
+
+const connectDB = async () => {
+  if (isConnected) return;
+  
   try {
-    await mongoose.connect(process.env.MONGO_URL)
-    console.log('MongoDB database is connected')
-  } catch(err) {
-    console.log('MongoDB database connection failed')
+    await mongoose.connect(process.env.MONGO_URL, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    isConnected = true;
+    console.log('MongoDB database is connected');
+  } catch (err) {
+    console.log('MongoDB database connection failed:', err);
+    throw err;
   }
 }
 
 // middleware
+app.use(cors(corsOptions))
 app.use(express.json())
 app.use(cookieParser())
-app.use(cors(corsOptions))
+
+// Connect to database before handling requests
+app.use(async (req, res, next) => {
+  if (!isConnected) {
+    try {
+      await connectDB();
+    } catch (error) {
+      return res.status(500).json({ 
+        success: false, 
+        message: 'Database connection failed' 
+      });
+    }
+  }
+  next();
+});
 
 // Routes
 app.use('/api/v1/auth', authRoute)
@@ -62,11 +88,36 @@ app.use('/api/v1/trainers', trainerRoute)
 app.use('/api/v1/reviews', reviewRoute)
 app.use('/api/v1/bookings', bookingRoute)
 
+// Root route
 app.get('/', (req, res) => {
-  res.send('API is working')
+  res.json({ message: 'API is working', timestamp: new Date().toISOString() })
 })
 
-app.listen(port, () => {
-  connectDB()
-  console.log('Server is running on port ' + port)
+// Health check route
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'healthy', 
+    database: isConnected ? 'connected' : 'disconnected',
+    timestamp: new Date().toISOString()
+  })
 })
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Error:', err);
+  res.status(500).json({
+    success: false,
+    message: 'Internal server error',
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
+});
+
+// For Vercel deployment
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(port, () => {
+    connectDB();
+    console.log('Server is running on port ' + port);
+  });
+}
+
+export default app;
