@@ -13,10 +13,24 @@ const bookingSchema = new mongoose.Schema(
       required: true,
     },
     ticketPrice: { type: String, required: true },
-    // bookingDate: {
-    //   type: Date,
-    //   required: true,
-    // },
+    bookingDate: {
+      type: Date,
+      required: true,
+    },
+    timeSlot: {
+      day: {
+        type: String,
+        required: true,
+      },
+      startingTime: {
+        type: String,
+        required: true,
+      },
+      endingTime: {
+        type: String,
+        required: true,
+      }
+    },
     status: {
       type: String,
       enum: ["pending", "approved", "cancelled"],
@@ -33,7 +47,7 @@ const bookingSchema = new mongoose.Schema(
 bookingSchema.pre(/^find/, function (next) {
   this.populate("user").populate({
     path: "trainer",
-    select: "name",
+    select: "name specialization photo",
   });
   next();
 });

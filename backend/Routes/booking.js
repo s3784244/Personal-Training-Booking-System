@@ -5,7 +5,7 @@ import { getCheckoutSession, handleStripeWebhook } from '../Controllers/bookingC
 const router = express.Router();
 
 router.post('/checkout-session/:trainerId', authenticate, getCheckoutSession);
-router.post('/webhook', express.raw({type: 'application/json'}), handleStripeWebhook);
+router.post('/webhook', handleStripeWebhook);
 
 export default router;
 // This code defines an Express router for handling booking-related routes.

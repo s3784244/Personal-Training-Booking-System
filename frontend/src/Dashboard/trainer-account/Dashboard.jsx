@@ -17,7 +17,6 @@ const Dashboard = () => {
   const [tab, setTab] = useState("overview");
 
   return (
-    
     <section>
       <div className="max-w-[1170px] px-5 mx-auto">
         {loading && !error && <Loader />}
@@ -27,28 +26,6 @@ const Dashboard = () => {
           <div className="grid lg:grid-cols-3 gap-[30px] lg:gap-[50px]">
             <Tabs tab={tab} setTab={setTab} />
             <div className="lg:col-span-2">
-              {/* COMMENTED OUT: Temporarily approval notification */}
-              {/* {data.isApproved === "pending" && (
-                <div className="flex p-4 mb-4 text-yellow-800 bg-yellow-50 rounded-lg">
-                  <svg
-                    aria-hidden="true"
-                    className="flex-shrink-0 w-5 h-5"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M18 10a8 8 0 1 1-16 0 8 8 0 0116 0zm-7-4a1 1 0 00-1 1v3a1 1 0 001 1h1a1 1 0 100-2h-1V7a1 1 0 00-1-1zm1 8a1 1 0 100-2 1 1 0 000 2z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  <span className="sr-only">Info</span>
-                  <div className="ml-3 text-sm font-medium">
-                    To get approval please complete your profile. We'll review manually and approve within 3 days.
-                  </div>
-                </div>
-              )} */}
               <div className="mt-8">
                 {tab === "overview" && (
                   <div>
@@ -87,12 +64,14 @@ const Dashboard = () => {
                     <TrainerAbout
                       name={data.name}
                       about={data.about}
-                      qualifications={data.qualifications || []} // Ensure it's an array
+                      qualifications={data.qualifications || []}
                       experiences={data.experiences || []}
                     />
                   </div>
                 )}
-                {tab === "bookings" && <Bookings bookings={data.bookings}/>}
+                {tab === "bookings" && (
+                  <Bookings bookings={data?.bookings || []} />
+                )}
                 {tab === "profile" && <Profile trainerData={data}/>}
               </div>
             </div>

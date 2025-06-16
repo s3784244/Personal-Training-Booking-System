@@ -1,49 +1,65 @@
 /**
- * Controllers folder contains the logic for handling API requests. 
- * Each controller function corresponds to an endpoint in the Routes/ 
- * folder.
+ * Trainer Controller
  * 
- * Handles trainer-related operations.
- *
- * Functions:
- * - updateTrainer: Updates a trainer's details.
- * - deleteTrainer: Deletes a trainer.
- * - getAllTrainer: Fetches all trainers.
- * - getSingleTrainer: Fetches a single trainer's details.
- * - getTrainerProfile: Fetches the logged-in trainer's profile.
+ * Handles all trainer-related backend operations including:
+ * - CRUD operations for trainer profiles
+ * - Fetching trainer data with associated bookings
+ * - Managing trainer search and filtering
+ * 
+ * This controller manages both public trainer data (for clients browsing)
+ * and private trainer data (for trainer dashboard).
  */
 
 import BookingSchema from "../models/BookingSchema.js";
 import Trainer from "../models/TrainerSchema.js";
 
-// Update trainer information by ID
+/**
+ * Update Trainer Profile
+ * 
+ * Allows trainers to update their profile information including
+ * qualifications, experiences, time slots, and personal details.
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
 export const updateTrainer = async (req, res) => {
-  const id = req.params.id;
+  const id = req.params.id; // Trainer ID from URL parameter
 
   try {
-    // Update trainer with data from request body
+    // Update trainer document with new data from request body
+    // $set operator ensures only provided fields are updated
     const updatedTrainer = await Trainer.findByIdAndUpdate(
       id,
-      { $set: req.body },
-      { new: true } // return the updated document
+      { $set: req.body }, // Update with data from request body
+      { new: true } // Return the updated document instead of the old one
     );
 
+    // Send success response with updated trainer data
     res.status(200).json({
       success: true,
       message: "Successfully updated",
       data: updatedTrainer,
     });
   } catch (err) {
+    // Handle database or validation errors
     res.status(500).json({ success: false, message: "Failed to update" });
   }
 };
 
-// Delete trainer by ID
+/**
+ * Delete Trainer Profile
+ * 
+ * Removes a trainer from the system. This should be used carefully
+ * as it will also affect any existing bookings with this trainer.
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
 export const deleteTrainer = async (req, res) => {
-  const id = req.params.id;
+  const id = req.params.id; // Trainer ID from URL parameter
 
   try {
-    // Find and delete the trainer
+    // Remove trainer document from database
     await Trainer.findByIdAndDelete(id);
 
     res.status(200).json({
@@ -51,16 +67,27 @@ export const deleteTrainer = async (req, res) => {
       message: "Successfully deleted",
     });
   } catch (err) {
+    // Handle database errors
     res.status(500).json({ success: false, message: "Failed to delete" });
   }
 };
 
-// Get a single trainer by ID, including their reviews (excluding password)
+/**
+ * Get Single Trainer (Public View)
+ * 
+ * Fetches detailed information about a specific trainer for public viewing.
+ * Includes reviews and ratings but excludes sensitive information like passwords.
+ * Used when clients view trainer detail pages.
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
 export const getSingleTrainer = async (req, res) => {
-  const id = req.params.id;
+  const id = req.params.id; // Trainer ID from URL parameter
 
   try {
-    // Populate 'reviews' field and exclude password from response
+    // Find trainer and populate their reviews for display
+    // .select("-password") excludes password field from response
     const trainer = await Trainer.findById(id).populate('reviews').select("-password");
 
     res.status(200).json({
@@ -69,30 +96,41 @@ export const getSingleTrainer = async (req, res) => {
       data: trainer,
     });
   } catch (err) {
+    // Handle case where trainer doesn't exist
     res.status(404).json({ success: false, message: "No trainer found" });
   }
 };
 
-// Get all approved trainers, with optional search filtering
+/**
+ * Get All Trainers (Public Listing)
+ * 
+ * Fetches all trainers for the public trainer listing page.
+ * Supports search functionality by name or specialization.
+ * Note: Approval filtering is currently disabled for development.
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
 export const getAllTrainer = async (req, res) => {
   try {
-    const { query } = req.query;
+    const { query } = req.query; // Extract search query from URL parameters
     let trainers;
 
-    // If a search query is provided, filter trainers by name or specialization
+    // Handle search functionality
     if (query) {
+      // Search trainers by name OR specialization (case-insensitive)
       trainers = await Trainer.find({
-        // COMMENTED OUT: Remove approval filtering
+        // COMMENTED OUT: Remove approval filtering for development
         // isApproved: 'approved',
         $or: [
-          { name: { $regex: query, $options: 'i' } },
-          { specialization: { $regex: query, $options: 'i' } }
+          { name: { $regex: query, $options: 'i' } }, // Search in name field
+          { specialization: { $regex: query, $options: 'i' } } // Search in specialization field
         ],
-      }).select("-password");
+      }).select("-password"); // Exclude password from results
     } else {
-      // Otherwise, return all trainers (REMOVED APPROVAL FILTERING)
+      // Return all trainers if no search query
       trainers = await Trainer.find({}).select("-password");
-      // COMMENTED OUT: Remove approval filtering
+      // COMMENTED OUT: In production, you might want to only show approved trainers
       // trainers = await Trainer.find({ isApproved: 'approved' }).select("-password");
     }
 
@@ -102,38 +140,53 @@ export const getAllTrainer = async (req, res) => {
       data: trainers,
     });
   } catch (err) {
+    // Handle database errors
     res.status(404).json({ success: false, message: "Not found" });
   }
 };
 
-// Get the profile of the currently logged-in trainer
+/**
+ * Get Trainer Profile (Private Dashboard View)
+ * 
+ * Fetches complete trainer profile information including their bookings.
+ * This is used for the trainer's private dashboard where they can see
+ * their profile data and manage their bookings.
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
 export const getTrainerProfile = async (req, res) => {
-  const trainerId = req.userId; // Set from auth middleware
+  const trainerId = req.userId; // Get trainer ID from JWT token (set by auth middleware)
 
   try {
-    // Find the trainer by ID
+    // Find the trainer's profile
     const trainer = await Trainer.findById(trainerId);
 
+    // Check if trainer exists
     if (!trainer) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Trainer not found" });
+      return res.status(404).json({ success: false, message: "Trainer not found" });
     }
 
-    // Exclude password and fetch bookings for this trainer
-    const { password, ...rest } = trainer._doc;
-    const bookings = await BookingSchema.find({ trainer: trainerId });
+    // Fetch all bookings for this trainer with populated user data
+    const bookings = await BookingSchema.find({ trainer: trainerId })
+      .populate('user', 'name email photo gender') // Include client details
+      .sort({ createdAt: -1 }); // Sort by newest bookings first
 
+    // Remove password from trainer data before sending response
+    const { password, ...rest } = trainer._doc;
+
+    // Send trainer profile data along with their bookings
     res.status(200).json({
       success: true,
-      message: 'Getting profile info',
-      data: { ...rest, bookings }
+      message: 'Profile info retrieved',
+      data: { ...rest, bookings } // Merge trainer data with bookings array
     });
 
   } catch (err) {
+    // Handle any database or server errors
     res.status(500).json({
       success: false,
-      message: "Something went wrong, cannot get"
+      message: "Something went wrong, cannot get profile"
     });
   }
 };

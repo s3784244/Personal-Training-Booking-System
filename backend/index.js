@@ -30,37 +30,37 @@ const corsOptions = {
   origin: true
 }
 
+// IMPORTANT: Handle Stripe webhook BEFORE express.json() middleware
+app.use('/api/v1/bookings/webhook', express.raw({type: 'application/json'}))
+
 // database connection
 mongoose.set('strictQuery', false)
 const connectDB = async() => {
   try {
     await mongoose.connect(process.env.MONGO_URL)
-      // useNewUrlParser: true,
-      // useUnifiedTopology: true,  
-      console.log('mongodb database is connected')
-
-  } catch (err) {
-    console.log('mongo database connection failed', err)
-    
+    console.log('MongoDB database is connected')
+  } catch(err) {
+    console.log('MongoDB database connection failed')
   }
 }
 
-// app.get ('/', (req, res) => {
-//   res.send('Api is working')
-// })
-
-//middleware
+// middleware
 app.use(express.json())
 app.use(cookieParser())
 app.use(cors(corsOptions))
-app.use('/api/v1/auth', authRoute);
-app.use('/api/v1/users', userRoute);
-app.use('/api/v1/trainers', trainerRoute);
-app.use('/api/v1/reviews', reviewRoute);
-app.use('/api/v1/bookings', bookingRoute);
 
+// Routes
+app.use('/api/v1/auth', authRoute)
+app.use('/api/v1/users', userRoute)
+app.use('/api/v1/trainers', trainerRoute)
+app.use('/api/v1/reviews', reviewRoute)
+app.use('/api/v1/bookings', bookingRoute)
+
+app.get('/', (req, res) => {
+  res.send('API is working')
+})
 
 app.listen(port, () => {
-  connectDB();
-  console.log('server is running on port' + port)
+  connectDB()
+  console.log('Server is running on port ' + port)
 })
