@@ -80,8 +80,8 @@ export const register = async (req, res) => {
 };
 // Login controller: handles login for both client and trainer
 export const login = async (req, res) => {
-
   const {email, password} = req.body
+  
   try {
     let user = null
 
@@ -97,26 +97,31 @@ export const login = async (req, res) => {
     
     // Check for user in both collections
     if(!user){
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ success: false, message: "User not found" });
     }
     
-    // Compare entered password with hashed password in DB
-    const isPasswordMatch = await bcrypt.compare(req.body.password, user.password)
+    const isPasswordMatch = await bcrypt.compare(password, user.password) 
     
     if(!isPasswordMatch){
-      return res.status(40).json({ status:false, message: "Invalid credentials" });
+      return res.status(400).json({ success: false, message: "Invalid credentials" }); 
     }
 
     // if password match then we get auth token
     const token = generateToken(user);
 
     // Remove sensitive or unnecessary fields before sending response
-    const {password, role, bookings, ...rest} = user._doc
+    const {password: userPassword, role, bookings, ...rest} = user._doc
 
-    // Send success response with token and user data
-    res.status(200).json({ status:true, message: "Successfully login", token, data: { ...rest}, role });
+    res.status(200).json({ 
+      success: true, 
+      message: "Successfully logged in", 
+      token, 
+      data: { ...rest}, 
+      role 
+    });
   
   } catch (err) {
-    res.status(500).json({ status: false, message: "Failed to login" });
+    console.error('Login error:', err);
+    res.status(500).json({ success: false, message: "Failed to login" });
   }
 };
