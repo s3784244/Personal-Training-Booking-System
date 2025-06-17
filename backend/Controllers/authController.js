@@ -95,21 +95,18 @@ export const login = async (req, res) => {
       user = trainer
     }
     
-    // Check for user in both collections
     if(!user){
       return res.status(404).json({ success: false, message: "User not found" });
     }
     
-    const isPasswordMatch = await bcrypt.compare(password, user.password) 
+    // ✅ CRITICAL FIX: Make sure you're using the correct variable
+    const isPasswordMatch = await bcrypt.compare(password, user.password) // Use 'password', not 'req.body.password'
     
     if(!isPasswordMatch){
-      return res.status(400).json({ success: false, message: "Invalid credentials" }); 
+      return res.status(400).json({ success: false, message: "Invalid credentials" });
     }
 
-    // if password match then we get auth token
     const token = generateToken(user);
-
-    // Remove sensitive or unnecessary fields before sending response
     const {password: userPassword, role, bookings, ...rest} = user._doc
 
     res.status(200).json({ 
