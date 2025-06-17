@@ -82,7 +82,7 @@ const connectDB = async () => {
   try {
     const opts = {
       bufferCommands: false,
-      bufferMaxEntries: 0,
+      // bufferMaxEntries: 0,
       useNewUrlParser: true,
       useUnifiedTopology: true,
       serverSelectionTimeoutMS: 5000,
