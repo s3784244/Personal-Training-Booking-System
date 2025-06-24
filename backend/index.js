@@ -15,7 +15,7 @@ import cors from 'cors'
 import mongoose from 'mongoose'
 import dotenv from 'dotenv'
 
-// Import routes
+// Import routes - Remove try/catch from imports
 import authRoute from './Routes/auth.js'
 import userRoute from './Routes/user.js'
 import trainerRoute from './Routes/trainer.js'
@@ -50,7 +50,7 @@ app.use('/api/v1/bookings/webhook', express.raw({type: 'application/json'}))
 app.use(express.json({ limit: '10mb' }))
 app.use(cookieParser())
 
-// MongoDB connection for serverless - cached
+// MongoDB connection for serverless
 let cachedConnection = null
 
 const connectDB = async () => {
@@ -119,14 +119,15 @@ app.get('/api/v1/test', (req, res) => {
   })
 })
 
-// ✅ KEY FIX: Keep your existing routes as they are
-// The vercel.json rewrite handles the double /api issue
+// Register API routes - SIMPLIFIED AND FIXED
 console.log('📋 Registering API routes...')
+
 app.use('/api/v1/auth', authRoute)
 app.use('/api/v1/users', userRoute)
 app.use('/api/v1/trainers', trainerRoute)
 app.use('/api/v1/reviews', reviewRoute)
 app.use('/api/v1/bookings', bookingRoute)
+
 console.log('✅ All routes registered successfully')
 
 // Error handling middleware
@@ -139,7 +140,7 @@ app.use((err, req, res, next) => {
   })
 })
 
-// 404 handler
+// 404 handler - MUST BE LAST
 app.use('*', (req, res) => {
   console.log(`🔍 404 - Route not found: ${req.method} ${req.originalUrl}`)
   res.status(404).json({
@@ -150,15 +151,13 @@ app.use('*', (req, res) => {
   })
 })
 
-// ✅ DUAL MODE: Works for both local development AND serverless
+// Local development
 if (process.env.NODE_ENV !== 'production') {
-  // Local development
-  const port = process.env.PORT || 5000
+  const port = process.env.PORT || 8000
   app.listen(port, async () => {
     await connectDB()
     console.log(`🚀 Server running on port ${port}`)
   })
 }
 
-// ✅ Export for Vercel serverless (this is the key!)
 export default app
