@@ -1,5 +1,5 @@
 import TrainerCard from './../../components/Trainers/TrainerCard'
-import { trainers } from '../../assets/data/trainers'
+// import { trainers } from '../../assets/data/trainers'
 import Testimonial from '../../components/Testimonial/Testimonial';
 import { BASE_URL } from "./../../config";
 import useFetchData from "./../../hooks/useFetchData";
