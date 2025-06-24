@@ -15,16 +15,49 @@ import cors from 'cors'
 import mongoose from 'mongoose'
 import dotenv from 'dotenv'
 
-// Import routes
-import authRoute from './Routes/auth.js'
-import userRoute from './Routes/user.js'
-import trainerRoute from './Routes/trainer.js'
-import reviewRoute from './Routes/review.js'
-import bookingRoute from './Routes/booking.js'
-
 dotenv.config()
 
 const app = express()
+
+// ✅ ADD DEBUGGING FOR IMPORTS
+console.log('🔄 Starting route imports...')
+
+let authRoute, userRoute, trainerRoute, reviewRoute, bookingRoute
+
+try {
+  authRoute = (await import('./Routes/auth.js')).default
+  console.log('✅ Auth route imported:', !!authRoute)
+} catch (err) {
+  console.error('❌ Auth route import failed:', err.message)
+}
+
+try {
+  userRoute = (await import('./Routes/user.js')).default
+  console.log('✅ User route imported:', !!userRoute)
+} catch (err) {
+  console.error('❌ User route import failed:', err.message)
+}
+
+try {
+  trainerRoute = (await import('./Routes/trainer.js')).default
+  console.log('✅ Trainer route imported:', !!trainerRoute)
+} catch (err) {
+  console.error('❌ Trainer route import failed:', err.message)
+}
+
+try {
+  reviewRoute = (await import('./Routes/review.js')).default
+  console.log('✅ Review route imported:', !!reviewRoute)
+} catch (err) {
+  console.error('❌ Review route import failed:', err.message)
+}
+
+try {
+  bookingRoute = (await import('./Routes/booking.js')).default
+  console.log('✅ Booking route imported:', !!bookingRoute)
+} catch (err) {
+  console.error('❌ Booking route import failed:', err.message)
+}
 
 // CORS configuration
 const corsOptions = {
@@ -43,14 +76,11 @@ const corsOptions = {
 app.use(cors(corsOptions))
 app.options('*', cors(corsOptions))
 
-// Stripe webhook - must be before express.json()
-app.use('/api/v1/bookings/webhook', express.raw({type: 'application/json'}))
-
-// Other middleware
+// Middleware
 app.use(express.json({ limit: '10mb' }))
 app.use(cookieParser())
 
-// MongoDB connection for serverless
+// MongoDB connection cache
 let cachedConnection = null
 
 const connectDB = async () => {
@@ -59,15 +89,11 @@ const connectDB = async () => {
   }
 
   try {
-    const opts = {
+    cachedConnection = await mongoose.connect(process.env.MONGO_URL, {
       bufferCommands: false,
-      // useNewUrlParser: true,
-      // useUnifiedTopology: true,
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
-    }
-
-    cachedConnection = await mongoose.connect(process.env.MONGO_URL, opts)
+    })
     console.log('✅ MongoDB connected successfully')
     return cachedConnection
   } catch (err) {
@@ -76,7 +102,7 @@ const connectDB = async () => {
   }
 }
 
-// Database connection middleware
+// Connect to DB on each request
 app.use(async (req, res, next) => {
   try {
     await connectDB()
@@ -91,7 +117,7 @@ app.use(async (req, res, next) => {
   }
 })
 
-// Root route
+// Basic routes
 app.get('/', (req, res) => {
   res.json({ 
     message: 'Personal Training Booking API is working!', 
@@ -101,7 +127,6 @@ app.get('/', (req, res) => {
   })
 })
 
-// Health check
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'healthy', 
@@ -119,14 +144,45 @@ app.get('/api/v1/test', (req, res) => {
   })
 })
 
-// Register API routes
+// ✅ CONDITIONALLY REGISTER ROUTES ONLY IF IMPORTS SUCCEEDED
 console.log('📋 Registering API routes...')
-app.use('/api/v1/auth', authRoute)
-app.use('/api/v1/users', userRoute)
-app.use('/api/v1/trainers', trainerRoute)
-app.use('/api/v1/reviews', reviewRoute)
-app.use('/api/v1/bookings', bookingRoute)
-console.log('✅ All routes registered successfully')
+
+if (authRoute) {
+  app.use('/api/v1/auth', authRoute)
+  console.log('✅ Auth routes registered')
+} else {
+  console.error('❌ Skipping auth routes - import failed')
+}
+
+if (userRoute) {
+  app.use('/api/v1/users', userRoute)
+  console.log('✅ User routes registered')
+} else {
+  console.error('❌ Skipping user routes - import failed')
+}
+
+if (trainerRoute) {
+  app.use('/api/v1/trainers', trainerRoute)
+  console.log('✅ Trainer routes registered')
+} else {
+  console.error('❌ Skipping trainer routes - import failed')
+}
+
+if (reviewRoute) {
+  app.use('/api/v1/reviews', reviewRoute)
+  console.log('✅ Review routes registered')
+} else {
+  console.error('❌ Skipping review routes - import failed')
+}
+
+if (bookingRoute) {
+  app.use('/api/v1/bookings', bookingRoute)
+  console.log('✅ Booking routes registered')
+} else {
+  console.error('❌ Skipping booking routes - import failed')
+}
+
+console.log('✅ Route registration completed')
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -141,15 +197,29 @@ app.use((err, req, res, next) => {
 // 404 handler - MUST BE LAST
 app.use('*', (req, res) => {
   console.log(`🔍 404 - Route not found: ${req.method} ${req.originalUrl}`)
+  console.log('Available routes check:')
+  console.log('- Auth route loaded:', !!authRoute)
+  console.log('- User route loaded:', !!userRoute) 
+  console.log('- Trainer route loaded:', !!trainerRoute)
+  console.log('- Review route loaded:', !!reviewRoute)
+  console.log('- Booking route loaded:', !!bookingRoute)
+  
   res.status(404).json({
     success: false,
     message: `Route ${req.originalUrl} not found`,
     method: req.method,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    routeStatus: {
+      auth: !!authRoute,
+      user: !!userRoute,
+      trainer: !!trainerRoute,
+      review: !!reviewRoute,
+      booking: !!bookingRoute
+    }
   })
 })
 
-// ✅ LOCAL DEVELOPMENT ONLY
+// Local development
 if (process.env.NODE_ENV !== 'production') {
   const port = process.env.PORT || 5000
   app.listen(port, async () => {
@@ -158,5 +228,4 @@ if (process.env.NODE_ENV !== 'production') {
   })
 }
 
-// ✅ CRITICAL: Export for Vercel serverless (like the Stack Overflow solution)
 export default app
