@@ -13,10 +13,6 @@
       "methods": ["POST"]
     },
     {
-      "src": "/api/v1/(.*)",
-      "dest": "index.js"
-    },
-    {
       "src": "/(.*)",
       "dest": "index.js"
     }

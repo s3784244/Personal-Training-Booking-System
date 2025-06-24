@@ -15,7 +15,7 @@ import cors from 'cors'
 import mongoose from 'mongoose'
 import dotenv from 'dotenv'
 
-// Import routes - Remove try/catch from imports
+// Import routes
 import authRoute from './Routes/auth.js'
 import userRoute from './Routes/user.js'
 import trainerRoute from './Routes/trainer.js'
@@ -61,8 +61,8 @@ const connectDB = async () => {
   try {
     const opts = {
       bufferCommands: false,
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
+      // useNewUrlParser: true,
+      // useUnifiedTopology: true,
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
     }
@@ -119,15 +119,13 @@ app.get('/api/v1/test', (req, res) => {
   })
 })
 
-// Register API routes - SIMPLIFIED AND FIXED
+// Register API routes
 console.log('📋 Registering API routes...')
-
 app.use('/api/v1/auth', authRoute)
 app.use('/api/v1/users', userRoute)
 app.use('/api/v1/trainers', trainerRoute)
 app.use('/api/v1/reviews', reviewRoute)
 app.use('/api/v1/bookings', bookingRoute)
-
 console.log('✅ All routes registered successfully')
 
 // Error handling middleware
@@ -151,13 +149,14 @@ app.use('*', (req, res) => {
   })
 })
 
-// Local development
+// ✅ LOCAL DEVELOPMENT ONLY
 if (process.env.NODE_ENV !== 'production') {
-  const port = process.env.PORT || 8000
+  const port = process.env.PORT || 5000
   app.listen(port, async () => {
     await connectDB()
     console.log(`🚀 Server running on port ${port}`)
   })
 }
 
+// ✅ CRITICAL: Export for Vercel serverless (like the Stack Overflow solution)
 export default app
