@@ -19,7 +19,7 @@ dotenv.config()
 
 const app = express()
 
-// ✅ ADD DEBUGGING FOR IMPORTS
+// ✅ ADD DEBUGGING FOR IMPORTS test
 console.log('🔄 Starting route imports...')
 
 let authRoute, userRoute, trainerRoute, reviewRoute, bookingRoute
