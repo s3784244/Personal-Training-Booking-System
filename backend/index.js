@@ -1,12 +1,18 @@
 /**
- * Entry point of the backend application.
- *
- * Responsibilities:
- * - Sets up the Express server.
- * - Connects to the MongoDB database using Mongoose.
- * - Configures middleware: express.json, cookie-parser, and cors.
- * - Defines API routes for authentication, users, trainers, and reviews.
- * - Starts the server on the specified port.
+ * Personal Training Booking System - Backend Entry Point
+ * 
+ * This is the main server file that sets up and configures the Express.js application
+ * for the Personal Training Booking System. It handles:
+ * 
+ * - Server setup and middleware configuration
+ * - MongoDB database connection with caching for serverless deployment
+ * - CORS configuration for frontend-backend communication
+ * - API route registration for all application features
+ * - Error handling and logging
+ * - Stripe webhook integration for payment processing
+ * 
+ * The application is designed to work in both local development and 
+ * serverless production environments (Vercel).
  */
 
 import express from "express"
@@ -15,51 +21,25 @@ import cors from 'cors'
 import mongoose from 'mongoose'
 import dotenv from 'dotenv'
 
+// Import routes
+import authRoute from './Routes/auth.js'
+import userRoute from './Routes/user.js'
+import trainerRoute from './Routes/trainer.js'
+import reviewRoute from './Routes/review.js'
+import bookingRoute from './Routes/booking.js'
+
+// Load environment variables from .env file
 dotenv.config()
 
 const app = express()
 
-// ✅ ADD DEBUGGING FOR IMPORTS test
-console.log('🔄 Starting route imports...')
-
-let authRoute, userRoute, trainerRoute, reviewRoute, bookingRoute
-
-try {
-  authRoute = (await import('./Routes/auth.js')).default
-  console.log('✅ Auth route imported:', !!authRoute)
-} catch (err) {
-  console.error('❌ Auth route import failed:', err.message)
-}
-
-try {
-  userRoute = (await import('./Routes/user.js')).default
-  console.log('✅ User route imported:', !!userRoute)
-} catch (err) {
-  console.error('❌ User route import failed:', err.message)
-}
-
-try {
-  trainerRoute = (await import('./Routes/trainer.js')).default
-  console.log('✅ Trainer route imported:', !!trainerRoute)
-} catch (err) {
-  console.error('❌ Trainer route import failed:', err.message)
-}
-
-try {
-  reviewRoute = (await import('./Routes/review.js')).default
-  console.log('✅ Review route imported:', !!reviewRoute)
-} catch (err) {
-  console.error('❌ Review route import failed:', err.message)
-}
-
-try {
-  bookingRoute = (await import('./Routes/booking.js')).default
-  console.log('✅ Booking route imported:', !!bookingRoute)
-} catch (err) {
-  console.error('❌ Booking route import failed:', err.message)
-}
-
-// CORS configuration
+/**
+ * CORS Configuration
+ * 
+ * Configures Cross-Origin Resource Sharing to allow the React frontend
+ * to communicate with this backend API. Uses different origins based on
+ * the environment (development vs production).
+ */
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
     ? [
@@ -67,7 +47,7 @@ const corsOptions = {
         'https://personal-trainer-booking-api.vercel.app'
       ] 
     : ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:5000'],
-  credentials: true,
+  credentials: true, // Allow cookies and auth headers
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   optionsSuccessStatus: 200
@@ -76,21 +56,40 @@ const corsOptions = {
 app.use(cors(corsOptions))
 app.options('*', cors(corsOptions))
 
-// Middleware
+/**
+ * Stripe Webhook Middleware
+ * 
+ * CRITICAL: This must be before express.json() middleware because
+ * Stripe requires the raw request body to verify webhook signatures.
+ * If express.json() processes it first, the signature verification will fail.
+ */
+app.use('/api/v1/bookings/webhook', express.raw({type: 'application/json'}))
+
+// Parse JSON requests with 10MB limit (allows base64 image uploads)
 app.use(express.json({ limit: '10mb' }))
+// Parse cookies from incoming requests
 app.use(cookieParser())
 
-// MongoDB connection cache
+/**
+ * Database Connection with Caching
+ * 
+ * Implements connection caching which is essential for serverless environments.
+ * Without caching, each request would create a new database connection,
+ * leading to connection pool exhaustion and poor performance.
+ */
 let cachedConnection = null
 
 const connectDB = async () => {
+  // Return existing connection if already connected
   if (cachedConnection && mongoose.connection.readyState === 1) {
     return cachedConnection
   }
 
   try {
     cachedConnection = await mongoose.connect(process.env.MONGO_URL, {
+      // Disable buffering for serverless - commands execute immediately
       bufferCommands: false,
+      // Connection timeout settings optimized for serverless
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
     })
@@ -102,11 +101,16 @@ const connectDB = async () => {
   }
 }
 
-// Connect to DB on each request
+/**
+ * Database Connection Middleware
+ * 
+ * Ensures database connection before processing any request.
+ * This runs before all route handlers to guarantee database availability.
+ */
 app.use(async (req, res, next) => {
   try {
     await connectDB()
-    next()
+    next() // Continue to route handler
   } catch (error) {
     console.error('Database connection failed:', error)
     return res.status(500).json({ 
@@ -117,7 +121,12 @@ app.use(async (req, res, next) => {
   }
 })
 
-// Basic routes
+/**
+ * Root Endpoint - API Status Check
+ * 
+ * Provides basic information about the API including environment,
+ * database connection status, and timestamp. Useful for health monitoring.
+ */
 app.get('/', (req, res) => {
   res.json({ 
     message: 'Personal Training Booking API is working!', 
@@ -127,6 +136,12 @@ app.get('/', (req, res) => {
   })
 })
 
+/**
+ * Health Check Endpoint
+ * 
+ * Used by monitoring services and deployment platforms (like Vercel)
+ * to verify the application is healthy and ready to serve requests.
+ */
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'healthy', 
@@ -135,58 +150,21 @@ app.get('/health', (req, res) => {
   })
 })
 
-// Test route
-app.get('/api/v1/test', (req, res) => {
-  res.json({ 
-    message: 'API routes working!', 
-    timestamp: new Date().toISOString(),
-    database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
-  })
-})
+app.use('/api/v1/auth', authRoute)
+app.use('/api/v1/users', userRoute)
+app.use('/api/v1/trainers', trainerRoute)
+app.use('/api/v1/reviews', reviewRoute)
+app.use('/api/v1/bookings', bookingRoute)
 
-// ✅ CONDITIONALLY REGISTER ROUTES ONLY IF IMPORTS SUCCEEDED
-console.log('📋 Registering API routes...')
-
-if (authRoute) {
-  app.use('/api/v1/auth', authRoute)
-  console.log('✅ Auth routes registered')
-} else {
-  console.error('❌ Skipping auth routes - import failed')
-}
-
-if (userRoute) {
-  app.use('/api/v1/users', userRoute)
-  console.log('✅ User routes registered')
-} else {
-  console.error('❌ Skipping user routes - import failed')
-}
-
-if (trainerRoute) {
-  app.use('/api/v1/trainers', trainerRoute)
-  console.log('✅ Trainer routes registered')
-} else {
-  console.error('❌ Skipping trainer routes - import failed')
-}
-
-if (reviewRoute) {
-  app.use('/api/v1/reviews', reviewRoute)
-  console.log('✅ Review routes registered')
-} else {
-  console.error('❌ Skipping review routes - import failed')
-}
-
-if (bookingRoute) {
-  app.use('/api/v1/bookings', bookingRoute)
-  console.log('✅ Booking routes registered')
-} else {
-  console.error('❌ Skipping booking routes - import failed')
-}
-
-console.log('✅ Route registration completed')
-
-// Error handling middleware
+/**
+ * Global Error Handler
+ * 
+ * Catches any unhandled errors that occur during request processing.
+ * Prevents the server from crashing and provides consistent error responses.
+ * Shows detailed errors in development, generic messages in production.
+ */
 app.use((err, req, res, next) => {
-  console.error('🚨 Global error handler:', err)
+  console.error('Global error:', err)
   res.status(500).json({
     success: false,
     message: 'Internal server error',
@@ -194,38 +172,40 @@ app.use((err, req, res, next) => {
   })
 })
 
-// 404 handler - MUST BE LAST
+/**
+ * 404 Not Found Handler
+ * 
+ * IMPORTANT: This must be the last middleware as it catches all requests
+ * that didn't match any defined routes. Provides helpful debugging information
+ * about the failed request including URL, method, and timestamp.
+ */
 app.use('*', (req, res) => {
-  console.log(`🔍 404 - Route not found: ${req.method} ${req.originalUrl}`)
-  console.log('Available routes check:')
-  console.log('- Auth route loaded:', !!authRoute)
-  console.log('- User route loaded:', !!userRoute) 
-  console.log('- Trainer route loaded:', !!trainerRoute)
-  console.log('- Review route loaded:', !!reviewRoute)
-  console.log('- Booking route loaded:', !!bookingRoute)
-  
   res.status(404).json({
     success: false,
     message: `Route ${req.originalUrl} not found`,
     method: req.method,
-    timestamp: new Date().toISOString(),
-    routeStatus: {
-      auth: !!authRoute,
-      user: !!userRoute,
-      trainer: !!trainerRoute,
-      review: !!reviewRoute,
-      booking: !!bookingRoute
-    }
+    timestamp: new Date().toISOString()
   })
 })
 
-// Local development
+/**
+ * Local Development Server
+ * 
+ * Only starts a traditional Express server in development.
+ * In production (Vercel), the app is exported as a serverless function.
+ */
 if (process.env.NODE_ENV !== 'production') {
   const port = process.env.PORT || 5000
   app.listen(port, async () => {
-    await connectDB()
+    await connectDB() // Ensure database connection on startup
     console.log(`🚀 Server running on port ${port}`)
   })
 }
 
+/**
+ * Serverless Export
+ * 
+ * Exports the Express app for serverless deployment on Vercel.
+ * This allows Vercel to create serverless functions from the Express app.
+ */
 export default app

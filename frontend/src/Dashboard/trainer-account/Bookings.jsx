@@ -9,7 +9,6 @@
  * - bookings: Array of booking objects with client and session information
  */
 
-import React from 'react'
 import { formatDate } from '../../utils/formatDate' // Utility to format dates for display
 import convertTime from '../../utils/convertTime' // Utility to convert 24hr to 12hr time format
 

@@ -1,3 +1,21 @@
+/**
+ * Trainer Profile Edit Component
+ * 
+ * This component provides a comprehensive form for trainers to edit their profile information.
+ * It manages complex form state with nested arrays for qualifications, experiences, and time slots.
+ * 
+ * FEATURES:
+ * - Basic profile fields (name, email, phone, bio, gender, specialization, pricing)
+ * - Dynamic qualification management (add/edit/delete certifications)
+ * - Work experience tracking (add/edit/delete positions)
+ * - Time slot scheduling (add/edit/delete availability)
+ * - Photo upload with Cloudinary integration
+ * - Form validation and API integration for profile updates
+ * 
+ * PROPS:
+ * - trainerData: Complete trainer profile data from parent component
+ */
+
 import { useState, useEffect } from "react";
 import { AiOutlineDelete } from "react-icons/ai";
 import uploadImageToCloudinary from "./../../utils/uploadCloudinary";
@@ -5,6 +23,12 @@ import { BASE_URL, token } from './../../config';
 import { toast } from "react-toastify";
 
 const Profile = ({trainerData}) => {
+  /**
+   * Form State Management
+   * 
+   * Manages all trainer profile data in a single state object.
+   * Includes arrays for dynamic sections (qualifications, experiences, timeSlots).
+   */
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -14,13 +38,19 @@ const Profile = ({trainerData}) => {
     gender: "",
     specialization: "",
     ticketPrice: 0,
-    qualifications: [],
-    experiences: [],
-    timeSlots: [],
+    qualifications: [],  // Array of certification objects
+    experiences: [],     // Array of work experience objects
+    timeSlots: [],       // Array of availability time slots
     about:"",
     photo: null,
   });
 
+  /**
+   * Initialize Form with Trainer Data
+   * 
+   * Populates form fields with existing trainer data when component mounts
+   * or when trainerData prop changes. This ensures form shows current values.
+   */
   useEffect(() => {
     console.log("Form Data Qualifications:", formData.qualifications);
     console.log("Form Data Experiences:", formData.experiences);
@@ -43,11 +73,21 @@ const Profile = ({trainerData}) => {
     });
   }, [trainerData]);
   
-
+  /**
+   * Handle Basic Input Changes
+   * 
+   * Updates form state for simple text/select inputs using dynamic property names.
+   */
   const handleInputChange = e => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  /**
+   * Handle Photo Upload
+   * 
+   * Uploads image to Cloudinary and updates form state with the returned URL.
+   * This integrates with the cloud storage service for profile photos.
+   */
   const handleFileInputChange = async event => {
     const file = event.target.files[0];
     const data = await uploadImageToCloudinary(file);
@@ -57,12 +97,17 @@ const Profile = ({trainerData}) => {
     setFormData({ ...formData, photo: data?.url });
   };
   
-
+  /**
+   * Profile Update Handler
+   * 
+   * Submits the complete form data to the backend API to update trainer profile.
+   * Uses PUT request to trainer's specific endpoint with authentication.
+   */
   const updateProfileHandler = async e => {
     e.preventDefault();
   
   try {
-      // Get token from localStorage dynamically
+      // Get fresh token from localStorage to ensure authentication
       const token = localStorage.getItem('token');
       
       const res = await fetch(`${BASE_URL}trainers/${trainerData._id}`, {
@@ -86,8 +131,15 @@ const Profile = ({trainerData}) => {
     }    
   };
   
-
-  // resuable function to add items to the form data
+  /**
+   * Generic Add Item Function
+   * 
+   * Reusable function to add new items to array fields (qualifications, experiences, timeSlots).
+   * Uses functional state update to maintain immutability.
+   * 
+   * @param {string} key - The array field name to add to
+   * @param {Object} item - The new item object to add
+   */
   const addItem = (key, item) => {
     setFormData(prevFormData => ({
       ...prevFormData, 
@@ -95,6 +147,16 @@ const Profile = ({trainerData}) => {
     }));
   }
 
+  /**
+   * Generic Handle Array Input Changes
+   * 
+   * Updates specific fields within array items (e.g., editing a qualification's certification name).
+   * Maintains immutability by creating new arrays and objects.
+   * 
+   * @param {string} key - Array field name (qualifications, experiences, timeSlots)
+   * @param {number} index - Index of item being edited
+   * @param {Event} event - Input change event
+   */
   const handleReusableInputChangeFunc = (key, index, event) => {
     const { name, value } = event.target;
 
@@ -109,10 +171,27 @@ const Profile = ({trainerData}) => {
     });
   };
 
+  /**
+   * Generic Delete Item Function
+   * 
+   * Removes items from array fields using filter to maintain immutability.
+   * 
+   * @param {string} key - Array field name
+   * @param {number} index - Index of item to delete
+   */
   const deleteItem = (key, index) => {
     setFormData(prevFormData => ({...prevFormData, [key]:prevFormData[key].filter((_, i) => i !== index)}));
   }
 
+  // ===========================================
+  // QUALIFICATION MANAGEMENT FUNCTIONS
+  // ===========================================
+
+  /**
+   * Add New Qualification Entry
+   * 
+   * Adds a blank qualification object with required fields for certifications.
+   */
   const addQualification = (e) => {
     e.preventDefault();
     addItem("qualifications", {
@@ -120,15 +199,30 @@ const Profile = ({trainerData}) => {
     });
   }
 
+  /**
+   * Handle qualification field changes using the reusable function.
+   */
   const handleQualificationChange = (event, index) => {
     handleReusableInputChangeFunc("qualifications", index, event);
   }
 
+  /**
+   * Delete specific qualification entry.
+   */
   const deleteQualification = (e, index) => {
     e.preventDefault();
     deleteItem(`qualifications`, index);
   }
 
+  // ===========================================
+  // EXPERIENCE MANAGEMENT FUNCTIONS
+  // ===========================================
+
+  /**
+   * Add New Experience Entry
+   * 
+   * Adds a blank experience object with required fields for work history.
+   */
   const addExperience = (e) => {
     e.preventDefault();
     addItem("experiences", {
@@ -136,15 +230,30 @@ const Profile = ({trainerData}) => {
     });
   }
 
+  /**
+   * Handle experience field changes using the reusable function.
+   */
   const handleExperienceChange = (event, index) => {
     handleReusableInputChangeFunc("experiences", index, event);
   }
 
+  /**
+   * Delete specific experience entry.
+   */
   const deleteExperience = (e, index) => {
     e.preventDefault();
     deleteItem("experiences", index);
   }
 
+  // ===========================================
+  // TIME SLOT MANAGEMENT FUNCTIONS
+  // ===========================================
+
+  /**
+   * Add New Time Slot Entry
+   * 
+   * Adds a blank time slot object for trainer availability scheduling.
+   */
   const addTimeslot = (e) => {
     e.preventDefault();
     addItem("timeSlots", {
@@ -152,10 +261,16 @@ const Profile = ({trainerData}) => {
     });
   }
 
+  /**
+   * Handle time slot field changes using the reusable function.
+   */
   const handleTimeslotChange = (event, index) => {
     handleReusableInputChangeFunc("timeSlots", index, event);
   }
 
+  /**
+   * Delete specific time slot entry.
+   */
   const deleteTimeslot = (e, index) => {
     e.preventDefault();
     deleteItem("timeSlots", index);
@@ -167,6 +282,9 @@ const Profile = ({trainerData}) => {
         Profile Information
       </h2>
       <form>
+        {/* BASIC PROFILE INFORMATION SECTION */}
+        
+        {/* Trainer Name Field */}
         <div className="mb-5">
           <p className="form__label">Name*</p>
           <input
@@ -178,6 +296,8 @@ const Profile = ({trainerData}) => {
             className="form__input"
           />
         </div>
+
+        {/* Email Field - Read-only for security */}
         <div className="mb-5">
           <p className="form__label">Email*</p>
           <input
@@ -187,11 +307,13 @@ const Profile = ({trainerData}) => {
             onChange={handleInputChange}
             placeholder="Email"
             className="form__input"
-            readOnly
+            readOnly  // Email cannot be changed for security reasons
             aria-readonly
             disabled='true'
           />
         </div>
+
+        {/* Phone Number Field */}
         <div className="mb-5">
           <p className="form__label">Phone*</p>
           <input
@@ -201,11 +323,10 @@ const Profile = ({trainerData}) => {
             onChange={handleInputChange}
             placeholder="Phone number"
             className="form__input"
-            // readOnly
-            // aria-readonly
-            // disabled='true'
           />
         </div>
+
+        {/* Bio Field - Short description with character limit */}
         <div className="mb-5">
           <p className="form__label">Bio*</p>
           <input
@@ -215,11 +336,15 @@ const Profile = ({trainerData}) => {
             onChange={handleInputChange}
             placeholder="Bio"
             className="form__input"
-            maxLength={100}
+            maxLength={100}  // Limit bio length for consistency
           />
         </div>
+
+        {/* THREE-COLUMN GRID: Gender, Specialization, Pricing */}
         <div className="mb-5">
           <div className="grid grid-cols-3 gap-5 mb-[30px]">
+            
+            {/* Gender Selection */}
             <div>
               <p className="form__label">Gender*</p>
               <select
@@ -234,6 +359,8 @@ const Profile = ({trainerData}) => {
                 <option value="other">Other</option>
               </select>
             </div>
+
+            {/* Training Specialization */}
             <div>
               <p className="form__label">Specialisation*</p>
               <select
@@ -248,6 +375,8 @@ const Profile = ({trainerData}) => {
                 <option value="yoga">Yoga</option>
               </select>
             </div>
+
+            {/* Session Pricing */}
             <div>
               <p className="form__label">Ticket Price</p>
                 <input
@@ -261,11 +390,15 @@ const Profile = ({trainerData}) => {
             </div>
           </div>
         </div>
+
+        {/* QUALIFICATIONS SECTION - Dynamic Array Management */}
         <div className="mb-5">
           <p className="form__label">Qualification*</p>
+          {/* Render each qualification entry */}
           {formData.qualifications?.map((item, index) => (
             <div key={index}>
               <div>
+                {/* Date Range for Qualification */}
                 <div className="grid grid-cols-2 gap-5">
                   <div>
                     <p className="form__label">Starting Date*</p>
@@ -288,6 +421,8 @@ const Profile = ({trainerData}) => {
                     />
                   </div>
                 </div>
+
+                {/* Certification Details */}
                 <div className="grid grid-cols-2 gap-5 mt-5">
                   <div>
                     <p className="form__label">Certification*</p>
@@ -310,21 +445,28 @@ const Profile = ({trainerData}) => {
                     />
                   </div>
                 </div>
+
+                {/* Delete Qualification Button */}
                 <button onClick={e => deleteQualification(e, index)} className="bg-red-600 p-2 rounded-full text-white text-[18px] mt-2 mb-[30px] cursor-pointer">
                   <AiOutlineDelete />
                 </button>
               </div>
             </div>
           ))}
+          {/* Add New Qualification Button */}
           <button onClick={addQualification} className="bg-[#000] py-2 px-5 rounded text-white h-fit cursor-pointer">
             Add Qualification
           </button>
         </div>
+
+        {/* EXPERIENCES SECTION - Dynamic Array Management */}
         <div className="mb-5">
           <p className="form__label">Experiences*</p>
+          {/* Render each experience entry */}
           {formData.experiences?.map((item, index) => (
             <div key={index}>
               <div>
+                {/* Employment Date Range */}
                 <div className="grid grid-cols-2 gap-5">
                   <div>
                     <p className="form__label">Starting Date*</p>
@@ -347,6 +489,8 @@ const Profile = ({trainerData}) => {
                     />
                   </div>
                 </div>
+
+                {/* Job Details */}
                 <div className="grid grid-cols-2 gap-5 mt-5">
                   <div>
                     <p className="form__label">Position*</p>
@@ -369,22 +513,30 @@ const Profile = ({trainerData}) => {
                     />
                   </div>
                 </div>
+
+                {/* Delete Experience Button */}
                 <button onClick={e => deleteExperience(e, index)} className="bg-red-600 p-2 rounded-full text-white text-[18px] mt-2 mb-[30px] cursor-pointer">
                   <AiOutlineDelete />
                 </button>
               </div>
             </div>
           ))}
+          {/* Add New Experience Button */}
           <button onClick={addExperience} className="bg-[#000] py-2 px-5 rounded text-white h-fit cursor-pointer">
             Add Experience
           </button>
         
+        {/* TIME SLOTS SECTION - Availability Scheduling */}
         <div className="mb-5">
           <p className="form__label">Timeslots*</p>
+          {/* Render each time slot entry */}
           {formData.timeSlots?.map((item, index) => (
             <div key={index}>
               <div>
+                {/* Four-column grid for day and time inputs */}
                 <div className="grid grid-cols-2 md:grid-cols-4 mb-[30px] gap-5">
+                  
+                  {/* Day Selection */}
                   <div>
                     <p className="form__label">Day*</p>
                     <select 
@@ -403,6 +555,8 @@ const Profile = ({trainerData}) => {
                       <option value="friday">Friday</option>
                     </select>
                   </div>
+
+                  {/* Start Time */}
                   <div>
                     <p className="form__label">Starting Time*</p>
                     <input
@@ -413,6 +567,8 @@ const Profile = ({trainerData}) => {
                       onChange={e => handleTimeslotChange(e, index)}
                     />
                   </div>
+
+                  {/* End Time */}
                   <div>
                     <p className="form__label">Ending Time*</p>
                     <input
@@ -423,22 +579,25 @@ const Profile = ({trainerData}) => {
                       onChange={e => handleTimeslotChange(e, index)}
                     />
                   </div>
+
+                  {/* Delete Time Slot Button */}
                   <div className="flex items-center">
                     <button onClick={e => deleteTimeslot(e, index)} className="bg-red-600 p-2 rounded-full text-white text-[18px] cursor-pointer mt-6">
                       <AiOutlineDelete />
                     </button>
                   </div>
                 </div>
-                
               </div>
             </div>
           ))}
+          {/* Add New Time Slot Button */}
           <button onClick={addTimeslot} className="bg-[#000] py-2 px-5 rounded text-white h-fit cursor-pointer">
             Add TimeSlot
           </button>
+        </div>
+        </div>
 
-        </div>
-        </div>
+        {/* ABOUT SECTION - Detailed Description */}
         <div className="mb-5">
           <p className="form__label">About*</p>
           <textarea
@@ -451,14 +610,18 @@ const Profile = ({trainerData}) => {
           ></textarea>
         </div>
         
+        {/* PHOTO UPLOAD SECTION */}
         <div className="mb-5 flex items-center gap-3">
-        { formData.photo && (
-          <figure className="w-[60px] h-[60px] rounded-full border-2 border-solid border-primaryColor flex items-center justify-center">
-            <img src={formData.photo} alt="" className="w-full rounded-full" />
-          </figure>
+          {/* Current Photo Preview */}
+          { formData.photo && (
+            <figure className="w-[60px] h-[60px] rounded-full border-2 border-solid border-primaryColor flex items-center justify-center">
+              <img src={formData.photo} alt="" className="w-full rounded-full" />
+            </figure>
           )}
 
+          {/* Custom File Upload Button */}
           <div className="relative w-[130px] h-[50px]">
+            {/* Hidden file input */}
             <input
               type="file"
               name="photo"
@@ -467,6 +630,7 @@ const Profile = ({trainerData}) => {
               accept=".jpg, .png"
               className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
             />
+            {/* Styled label as button */}
             <label
               htmlFor="customFile"
               className="absolute top-0 left-0 w-full h-full flex items-center px-[0.75rem] py-[0.375rem] text-[15px] leading-6 overflow-hidden bg-[#0066ff46] text-headingColor font-semibold rounded-lg truncate cursor-pointer"
@@ -475,6 +639,8 @@ const Profile = ({trainerData}) => {
             </label>
           </div>
         </div>
+
+        {/* SUBMIT BUTTON */}
         <div className="mt-7">
           <button
             type="submit"

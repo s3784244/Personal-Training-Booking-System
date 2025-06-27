@@ -1,17 +1,25 @@
 /**
- * SidePanel Component
+ * Trainer Booking Side Panel Component
  * 
- * This component renders the booking interface on trainer detail pages.
- * It allows clients to:
- * - Select a date for their training session
- * - Choose from available time slots
- * - View booking summary
- * - Complete booking through Stripe payment
+ * This component handles the complete booking flow for personal training sessions:
  * 
- * Props:
- * - trainerId: ID of the trainer being booked
- * - ticketPrice: Price per training session
- * - timeSlots: Array of available time slots for the trainer
+ * FEATURES:
+ * - Date selection with trainer availability validation
+ * - Time slot selection based on trainer's schedule
+ * - Booking summary with selected details
+ * - Integration with Stripe for payment processing
+ * - User authentication and authorization checks
+ * 
+ * PROPS:
+ * - trainerId: Unique identifier for the trainer being booked
+ * - ticketPrice: Cost per training session
+ * - timeSlots: Array of available time slots with days and times
+ * 
+ * BUSINESS LOGIC:
+ * - Only allows booking on days when trainer is available
+ * - Prevents trainers from booking their own sessions
+ * - Requires user authentication before booking
+ * - Validates date and time slot selection before payment
  */
 
 import React, { useContext, useState } from 'react';
@@ -22,32 +30,60 @@ import { authContext } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const SidePanel = ({trainerId, ticketPrice, timeSlots}) => {
+  // Authentication context for user state and permissions
   const { role, user, token } = useContext(authContext);
   const navigate = useNavigate();
   
-  const [isBooking, setIsBooking] = useState(false);
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
-  const [selectedDate, setSelectedDate] = useState('');
+  // Component state management
+  const [isBooking, setIsBooking] = useState(false);           // Booking process state
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState(null); // Selected time slot
+  const [selectedDate, setSelectedDate] = useState('');           // Selected booking date
 
-  // Get available days from trainer's time slots
+  /**
+   * Extract Available Days from Trainer's Schedule
+   * 
+   * Processes the trainer's time slots to determine which days
+   * of the week they are available for bookings.
+   * 
+   * @returns {Array} - Array of available day names (lowercase)
+   */
   const getAvailableDays = () => {
     if (!timeSlots || timeSlots.length === 0) return [];
     
+    // Extract day names from time slots and filter out empty values
     return timeSlots.map(slot => slot.day?.toLowerCase()).filter(Boolean);
   };
 
-  // Check if a date is available for booking
+  /**
+   * Date Availability Checker
+   * 
+   * Determines if a specific date is available for booking
+   * by checking if it falls on one of the trainer's available days.
+   * 
+   * @param {string} dateString - Date in YYYY-MM-DD format
+   * @returns {boolean} - True if date is available for booking
+   */
   const isDateAvailable = (dateString) => {
     const availableDays = getAvailableDays();
     if (availableDays.length === 0) return false;
     
+    // Convert date to day name and check availability
     const date = new Date(dateString);
     const dayName = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
     
     return availableDays.includes(dayName);
   };
 
-  // Generate list of available dates for the next 3 months
+  /**
+   * Generate Available Dates for Next 3 Months
+   * 
+   * Creates a list of all available booking dates by:
+   * 1. Getting trainer's available days
+   * 2. Iterating through next 3 months
+   * 3. Including only dates that match available days
+   * 
+   * @returns {Array} - Array of available dates in YYYY-MM-DD format
+   */
   const getAvailableDates = () => {
     const availableDays = getAvailableDays();
     if (availableDays.length === 0) return [];
@@ -57,10 +93,11 @@ const SidePanel = ({trainerId, ticketPrice, timeSlots}) => {
     const threeMonthsFromNow = new Date();
     threeMonthsFromNow.setMonth(today.getMonth() + 3);
 
-    // Start from tomorrow
+    // Start checking from tomorrow
     const currentDate = new Date(today);
     currentDate.setDate(currentDate.getDate() + 1);
 
+    // Iterate through dates and add available ones
     while (currentDate <= threeMonthsFromNow) {
       const dayName = currentDate.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
       
@@ -74,13 +111,22 @@ const SidePanel = ({trainerId, ticketPrice, timeSlots}) => {
     return dates;
   };
 
-  // Handle date change with validation
+  /**
+   * Date Change Handler with Validation
+   * 
+   * Handles date selection and validates availability:
+   * - Checks if selected date is available for the trainer
+   * - Resets time slot selection when date changes
+   * - Shows error message for unavailable dates
+   * 
+   * @param {Event} e - Date input change event
+   */
   const handleDateChange = (e) => {
     const selectedDateValue = e.target.value;
     
     if (isDateAvailable(selectedDateValue)) {
       setSelectedDate(selectedDateValue);
-      // Reset time slot selection when date changes
+      // Reset time slot when date changes to avoid conflicts
       setSelectedTimeSlot(null);
     } else {
       toast.error('This date is not available. Please select a date when the trainer is available.');
@@ -88,20 +134,36 @@ const SidePanel = ({trainerId, ticketPrice, timeSlots}) => {
     }
   };
 
+  /**
+   * Main Booking Handler
+   * 
+   * Manages the complete booking process:
+   * 1. Validates user authentication and permissions
+   * 2. Checks if date and time slot are selected
+   * 3. Creates Stripe checkout session
+   * 4. Redirects to payment page
+   * 
+   * This function integrates with the backend API to create
+   * a secure payment session through Stripe.
+   */
   const bookingHandler = async () => {
+    // Prevent multiple simultaneous booking attempts
     if (isBooking) return;
     
+    // Authentication checks
     if (!token) {
       toast.info('Please login to book a session');
       navigate('/login');
       return;
     }
 
+    // Role-based access control
     if (role === 'trainer') {
       toast.error('Trainers cannot book sessions');
       return;
     }
 
+    // Booking validation
     if (!selectedTimeSlot) {
       toast.error('Please select a time slot');
       return;
@@ -117,6 +179,7 @@ const SidePanel = ({trainerId, ticketPrice, timeSlots}) => {
     try {
       const token = localStorage.getItem('token');
       
+      // Create Stripe checkout session
       const res = await fetch(`${BASE_URL}bookings/checkout-session/${trainerId}`, {
         method: 'post',
         headers: {
@@ -135,6 +198,7 @@ const SidePanel = ({trainerId, ticketPrice, timeSlots}) => {
         throw new Error(data.message + ' Please try again')
       }
 
+      // Redirect to Stripe checkout page
       if (data.session?.url) {
         window.location.href = data.session.url
       }
@@ -144,6 +208,15 @@ const SidePanel = ({trainerId, ticketPrice, timeSlots}) => {
     }
   }
 
+  /**
+   * Safe Time Conversion Utility
+   * 
+   * Converts time format with error handling to prevent app crashes
+   * from malformed time data.
+   * 
+   * @param {string} time - Time string to convert
+   * @returns {string} - Formatted time or fallback message
+   */
   const safeConvertTime = (time) => {
     if (!time || time === '') return 'Not set';
     try {
@@ -153,13 +226,22 @@ const SidePanel = ({trainerId, ticketPrice, timeSlots}) => {
     }
   };
 
+  // Component state calculations for UI logic
   const isTrainer = role === 'trainer';
   const isSameTrainer = user?._id === trainerId;
   const hasNoTimeSlots = !timeSlots || timeSlots.length === 0;
   const availableDates = getAvailableDates();
   
+  // Determine if booking button should be disabled
   const shouldDisableButton = isTrainer || isSameTrainer || hasNoTimeSlots || isBooking || !selectedTimeSlot || !selectedDate;
 
+  /**
+   * Get Appropriate Disable Message
+   * 
+   * Returns user-friendly message explaining why booking is disabled.
+   * 
+   * @returns {string} - Reason for disabled booking button
+   */
   const getDisableReason = () => {
     if (isBooking) return "Processing booking...";
     if (isTrainer) return "Trainers cannot book sessions";
@@ -173,7 +255,7 @@ const SidePanel = ({trainerId, ticketPrice, timeSlots}) => {
 
   return (
     <div className="shadow-panelShadow p-3 lg:p-5 rounded-md">
-      {/* Price Display Section */}
+      {/* PRICE DISPLAY SECTION */}
       <div className="flex items-center justify-between">
         <p className="text__para mt-0 font-semibold">Price</p>
         <span className="text-[16px] leading-7 lg:text-[22px] lg:leading-8 text-headingColor font-bold">
@@ -181,11 +263,11 @@ const SidePanel = ({trainerId, ticketPrice, timeSlots}) => {
         </span>
       </div>
 
-      {/* Date Selection with Available Days Info */}
+      {/* DATE SELECTION SECTION */}
       <div className="mt-[30px]">
         <p className="text__para mt-0 font-semibold text-headingColor">Select Date:</p>
         
-        {/* Show available days */}
+        {/* Display available days to guide user selection */}
         {getAvailableDays().length > 0 && (
           <div className="mt-1 mb-2">
             <p className="text-xs text-gray-600">
@@ -196,38 +278,16 @@ const SidePanel = ({trainerId, ticketPrice, timeSlots}) => {
           </div>
         )}
 
-        {/* Use regular date input with validation */}
+        {/* Date input with availability validation */}
         <input
           type="date"
           value={selectedDate}
-          min={today}
+          min={today}  // Prevent past date selection
           onChange={handleDateChange}
           className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-primaryColor"
         />
 
-        {/* ALTERNATIVE: datalist*/}
-        {/* Uncomment this section and comment the above input if you prefer dropdown */}
-{/*         
-        <select
-          value={selectedDate}
-          onChange={(e) => setSelectedDate(e.target.value)}
-          className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-primaryColor"
-        >
-          <option value="">Choose a date...</option>
-          {availableDates.map(date => (
-            <option key={date} value={date}>
-              {new Date(date).toLocaleDateString('en-US', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-              })}
-            </option>
-          ))}
-        </select>
-        */}
-
-        {/* Show warning if no available dates */}
+        {/* Warning message for trainers with no time slots */}
         {availableDates.length === 0 && hasNoTimeSlots && (
           <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded-md">
             <p className="text-yellow-700 text-xs">
@@ -237,7 +297,7 @@ const SidePanel = ({trainerId, ticketPrice, timeSlots}) => {
         )}
       </div>
 
-      {/* Time Slot Selection Section */}
+      {/* TIME SLOT SELECTION SECTION */}
       <div className="mt-[30px]">
         <p className="text__para mt-0 font-semibold text-headingColor">Available Time Slots:</p>
         <div className="mt-3 space-y-2">
@@ -246,16 +306,23 @@ const SidePanel = ({trainerId, ticketPrice, timeSlots}) => {
               key={index} 
               className={`p-3 border rounded-md cursor-pointer transition-colors ${
                 selectedTimeSlot === item 
-                  ? 'border-primaryColor bg-blue-50'
-                  : 'border-gray-300 hover:border-gray-400'
+                  ? 'border-primaryColor bg-blue-50'  // Highlight selected slot
+                  : 'border-gray-300 hover:border-gray-400'  // Default styling
               }`}
               onClick={() => setSelectedTimeSlot(item)}
             >
               <div className="flex items-center justify-between">
-                <p className="text-[15px] leading-6 text-textColor font-semibold">
-                  {safeConvertTime(item.startingTime)} - {safeConvertTime(item.endingTime)}
-                </p>
+                {/* Display day and time information */}
+                <div className="flex flex-col">
+                  <p className="text-[15px] leading-6 text-textColor font-semibold">
+                    {item.day ? item.day.charAt(0).toUpperCase() + item.day.slice(1) : 'Not set'}
+                  </p>
+                  <p className="text-[13px] leading-5 text-gray-500">
+                    {safeConvertTime(item.startingTime)} - {safeConvertTime(item.endingTime)}
+                  </p>
+                </div>
               </div>
+              {/* Selection indicator */}
               {selectedTimeSlot === item && (
                 <div className="mt-1">
                   <span className="text-primaryColor text-sm font-medium">✓ Selected</span>
@@ -265,6 +332,7 @@ const SidePanel = ({trainerId, ticketPrice, timeSlots}) => {
           ))}
         </div>
         
+        {/* No time slots available warning */}
         {hasNoTimeSlots && (
           <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
             <p className="text-yellow-700 text-sm font-medium">
@@ -274,7 +342,7 @@ const SidePanel = ({trainerId, ticketPrice, timeSlots}) => {
         )}
       </div>
 
-      {/* Booking Summary display */}
+      {/* BOOKING SUMMARY SECTION */}
       {selectedTimeSlot && selectedDate && (
         <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-md">
           <p className="text-green-700 text-sm font-medium">Booking Summary:</p>
@@ -292,7 +360,7 @@ const SidePanel = ({trainerId, ticketPrice, timeSlots}) => {
         </div>
       )}
 
-      {/* Booking Button Section */}
+      {/* BOOKING BUTTON SECTION */}
       {shouldDisableButton ? (
         <div className="text-center mt-4">
           <p className="text-gray-500 text-sm mb-2">

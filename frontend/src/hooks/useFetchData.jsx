@@ -1,53 +1,31 @@
-// import { useEffect, useState } from 'react'
-// import { token } from '../config'
+/**
+ * Custom Hook for Data Fetching
+ * 
+ * This reusable hook handles:
+ * - API data fetching with loading states
+ * - Error handling and user feedback
+ * - Automatic re-fetching when URL changes
+ * - Authentication token management
+ * 
+ * Used throughout the app for consistent data fetching patterns.
+ * 
+ * @param {string} url - The API endpoint to fetch data from
+ * @returns {Object} - Contains data, loading state, and error state
+ */
 
-// const useFetchData = (url) => {
-//   const [data, setData] = useState([]);
-//   const [loading, setLoading] = useState(false);
-//   const [error, setError] = useState(null);
-
-//   useEffect(() => {
-//     const fetchData = async () => {
-//       setLoading(true);
-
-//       try {
-//         const res = await fetch(url, {
-//           headers: { Authorization: `Bearer ${token}` },
-//         })
-
-//         const result = await res.json();
-
-//         if (!res.ok) {
-//           throw new Error(result.message);
-//         }
-//         setData(result.data);
-//         setLoading(false);
-
-//       } catch (err) {
-//         setLoading(false);
-//         setError(err.message);
-//       }
-//     } 
-
-//     fetchData();
-//   }, [url]);
-//   return {
-//     data, loading, error
-//   }
-// }
-
-// export default useFetchData
 import { useEffect, useState } from 'react'
 
 const useFetchData = (url) => {
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  // State management for API response
+  const [data, setData] = useState([])      // Fetched data
+  const [loading, setLoading] = useState(false)  // Loading indicator
+  const [error, setError] = useState(null)       // Error state
 
   useEffect(() => {
+    // Function to fetch data from API
     const fetchData = async () => {
-      setLoading(true);
-
+      setLoading(true)  // Show loading spinner
+      
       try {
         // Get token from localStorage dynamically instead of importing from config
         const token = localStorage.getItem('token');
@@ -59,25 +37,33 @@ const useFetchData = (url) => {
           },
         })
 
-        const result = await res.json();
+        const result = await res.json()
 
+        // Check if request was successful
         if (!res.ok) {
-          throw new Error(result.message);
+          throw new Error(result.message + '😢')
         }
-        setData(result.data);
-        setLoading(false);
 
+        // Update state with fetched data
+        setData(result.data)
+        setLoading(false)
+        
       } catch (err) {
-        setLoading(false);
-        setError(err.message);
+        // Handle errors and update error state
+        setLoading(false)
+        setError(err.message)
       }
-    } 
+    }
 
-    fetchData();
-  }, [url]);
-  
+    // Trigger data fetch when component mounts or URL changes
+    fetchData()
+  }, [url])  // Re-run effect when URL changes
+
+  // Return data and states for component consumption
   return {
-    data, loading, error
+    data,
+    loading,
+    error,
   }
 }
 

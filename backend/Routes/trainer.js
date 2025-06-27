@@ -25,13 +25,11 @@ import reviewRouter from "./review.js";
 
 const router = express.Router();
 
-// IMPORTANT: Put specific routes BEFORE parameterized routes
 router.get("/profile/me", authenticate, restrict(['trainer']), getTrainerProfile);
 
 // Nested route for reviews
 router.use("/:trainerId/reviews", reviewRouter);
 
-// Public routes - parameterized routes should come AFTER specific ones
 router.get("/", getAllTrainer); // This handles /api/v1/trainers
 router.get("/:id", getSingleTrainer);
 
