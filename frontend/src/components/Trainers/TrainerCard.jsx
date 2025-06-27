@@ -24,14 +24,24 @@ const TrainerCard = ({ trainer }) => {
   } = trainer;
 
   /**
-   * Text Capitalization Helper
+   * Enhanced Text Capitalization Helper
    * 
-   * Ensures consistent text formatting across trainer cards by capitalizing
-   * the first letter. Handles cases where API data might have inconsistent capitalization.
+   * Handles various text formatting scenarios:
+   * - Capitalizes first letter of each word
+   * - Adds spaces before capital letters in concatenated words
+   * - Ensures consistent formatting across trainer cards
    */
-  const capitalizeFirstLetter = (string) => {
+  const formatSpecialization = (string) => {
     if (!string) return '';
-    return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+    
+    // Add spaces before capital letters (for cases like "WeightTraining")
+    const withSpaces = string.replace(/([a-z])([A-Z])/g, '$1 $2');
+    
+    // Capitalize first letter of each word
+    return withSpaces
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
   };
 
   return (
@@ -50,9 +60,9 @@ const TrainerCard = ({ trainer }) => {
       </h2>
 
       <div className="mt-2 lg:mt-4 flex items-center justify-between">
-        {/* Specialization badge with brand colors */}
+        {/* Specialization badge with enhanced formatting */}
         <span className="bg-[#CCF0F3] text-irisBlueColor py-1 px-2 lg:py-2 lg:px-6 text-[12px] leading-4 lg:text-[16px] lg:leading-7 font-semibold rounded">
-          {capitalizeFirstLetter(specialization)}
+          {formatSpecialization(specialization)}
         </span>
 
         {/* Rating display with star icon and total count */}

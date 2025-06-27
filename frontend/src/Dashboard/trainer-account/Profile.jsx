@@ -336,7 +336,7 @@ const Profile = ({trainerData}) => {
             onChange={handleInputChange}
             placeholder="Bio"
             className="form__input"
-            maxLength={100}  // Limit bio length for consistency
+            maxLength={150}  // Limit bio length for consistency
           />
         </div>
 

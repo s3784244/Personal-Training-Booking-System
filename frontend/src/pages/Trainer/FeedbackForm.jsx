@@ -25,7 +25,7 @@ import React from 'react'
 import { useState } from 'react';
 import { AiFillStar } from "react-icons/ai";
 import { useParams } from 'react-router-dom';
-import { BASE_URL, token } from '../../config';
+import { BASE_URL } from '../../config'; // Remove token import
 import { toast } from 'react-toastify';
 import HashLoader from 'react-spinners/HashLoader';
 
@@ -69,13 +69,22 @@ const FeedbackForm = () => {
         setLoading(false);
         return toast.error('Rating & Review Fields are required');
       }
+
+      // Get token dynamically from localStorage
+      const token = localStorage.getItem('token');
+      
+      // Check if user is logged in
+      if (!token) {
+        setLoading(false);
+        return toast.error('Please login to submit a review');
+      }
   
       // Submit review to API
       const res = await fetch(`${BASE_URL}trainers/${id}/reviews`, {
         method: 'post',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,  // Authentication required
+          Authorization: `Bearer ${token}`, // Use dynamic token
         },
         body: JSON.stringify({ rating, reviewText }),
       });
@@ -88,6 +97,11 @@ const FeedbackForm = () => {
   
       setLoading(false);
       toast.success(result.message);
+      
+      // Reset form after successful submission
+      setRating(0);
+      setHover(0);
+      setReviewText("");
       
     } catch (err) {
       setLoading(false);
@@ -159,6 +173,7 @@ const FeedbackForm = () => {
           className="border border-solid border-[#0066ff34] focus:outline-none focus:outline-primaryColor w-full px-4 py-3 rounded-md"
           rows="5"
           placeholder="Write your message"
+          value={reviewText}
           onChange={e => setReviewText(e.target.value)}
         />
         {/*

@@ -212,22 +212,7 @@ The application integrates Stripe for secure payment processing:
 - [ ] Subscription-based pricing models
 - [ ] Multi-language support
 
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/new-feature`)
-3. Commit your changes (`git commit -am 'Add new feature'`)
-4. Push to the branch (`git push origin feature/new-feature`)
-5. Create a Pull Request
 
 ## Contributors
 
 **Kajal Soni** - Full Stack Developer
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Support
-
-For support, email kajalsoni003@gmail.com or create an issue in the repository.

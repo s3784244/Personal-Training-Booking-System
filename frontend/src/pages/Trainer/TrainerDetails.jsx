@@ -81,6 +81,17 @@ const TrainerDetails = () => {
     photo,
   } = trainer;
 
+  /**
+   * Text Capitalization Helper
+   * 
+   * Ensures consistent text formatting by capitalizing the first letter of specialization.
+   * Handles cases where API data might have inconsistent capitalization.
+   */
+  const capitalizeFirstLetter = (string) => {
+    if (!string) return '';
+    return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+  };
+
   return (
     <section>
       <div className="max-w-[1170px] px-5 mx-auto">
@@ -116,7 +127,7 @@ const TrainerDetails = () => {
                 <div>
                   {/* Specialization Badge */}
                   <span className="bg-[#CCF0F3] text-irisBlueColor py-1 px-6 lg:py-2 lg:px-6 text-[12px] leading-4 lg:text-[16px] lg:leading-7 font-semibold rounded">
-                    {specialization}
+                    {capitalizeFirstLetter(specialization)}
                   </span>
                   
                   {/* Trainer Name */}

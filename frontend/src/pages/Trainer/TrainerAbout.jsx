@@ -34,7 +34,7 @@ const TrainerAbout = ({ name, about, qualifications, experiences }) => {
       {/* Header with trainer's name prominently displayed */}
       <div className="text-[20px] leading-[30px] text-headingColor font-semibold flex items-center gap-2">
         <h3>
-          About  
+          About {" "}
           {/* Highlighted trainer name with brand color */}
           <span className="text-irisBlueColor font-bold text-[24px] leading-9">
             {name}
