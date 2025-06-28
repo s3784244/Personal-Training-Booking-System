@@ -100,7 +100,6 @@ export const getSingleTrainer = async (req, res) => {
       data: trainer,
     });
   } catch (err) {
-    console.error('❌ Error in getSingleTrainer:', err);
     res.status(500).json({ success: false, message: "Error fetching trainer" });
   }
 };
@@ -117,14 +116,11 @@ export const getSingleTrainer = async (req, res) => {
  */
 export const getAllTrainer = async (req, res) => {
   try {
-    console.log('🔍 getAllTrainer called')
-    console.log('Query params:', req.query)
     
     const { query } = req.query
     let trainers
 
     if (query && query.trim() !== '' && query !== 'undefined') {
-      console.log('🔎 Searching with query:', query)
       trainers = await Trainer.find({
         $or: [
           { name: { $regex: query, $options: 'i' } },
@@ -132,11 +128,9 @@ export const getAllTrainer = async (req, res) => {
         ],
       }).select("-password")
     } else {
-      console.log('📋 Getting all trainers')
       trainers = await Trainer.find({}).select("-password")
     }
 
-    console.log('✅ Found trainers:', trainers.length)
 
     res.status(200).json({
       success: true,
@@ -145,7 +139,6 @@ export const getAllTrainer = async (req, res) => {
       count: trainers.length
     })
   } catch (err) {
-    console.error('❌ Error in getAllTrainer:', err)
     res.status(500).json({ 
       success: false, 
       message: "Error fetching trainers",
