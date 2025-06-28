@@ -3,6 +3,8 @@
 ## Overview
 The Personal Training Booking System is a comprehensive web-based platform designed to connect clients with certified personal trainers. The application allows users to browse trainers, book training sessions with integrated payment processing, and manage their profiles. Trainers can manage their schedules, qualifications, and client bookings. The system provides a seamless experience for both clients and trainers, ensuring efficient communication and scheduling.
 
+![Personal Training Booking System](https://personal-trainer-booking.vercel.app/)
+
 ## Features
 
 ### For Clients:
