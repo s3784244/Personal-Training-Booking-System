@@ -82,14 +82,24 @@ const TrainerDetails = () => {
   } = trainer;
 
   /**
-   * Text Capitalization Helper
+   * Enhanced Text Formatting Helper
    * 
-   * Ensures consistent text formatting by capitalizing the first letter of specialization.
-   * Handles cases where API data might have inconsistent capitalization.
+   * Handles various text formatting scenarios:
+   * - Adds spaces before capital letters in concatenated words
+   * - Capitalizes first letter of each word
+   * - Ensures consistent formatting for specializations
    */
-  const capitalizeFirstLetter = (string) => {
+  const formatSpecialization = (string) => {
     if (!string) return '';
-    return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+    
+    // Add spaces before capital letters (for cases like "WeightTraining")
+    const withSpaces = string.replace(/([a-z])([A-Z])/g, '$1 $2');
+    
+    // Capitalize first letter of each word
+    return withSpaces
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
   };
 
   return (
@@ -127,7 +137,7 @@ const TrainerDetails = () => {
                 <div>
                   {/* Specialization Badge */}
                   <span className="bg-[#CCF0F3] text-irisBlueColor py-1 px-6 lg:py-2 lg:px-6 text-[12px] leading-4 lg:text-[16px] lg:leading-7 font-semibold rounded">
-                    {capitalizeFirstLetter(specialization)}
+                    {formatSpecialization(specialization)}
                   </span>
                   
                   {/* Trainer Name */}
