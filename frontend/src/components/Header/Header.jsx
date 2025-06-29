@@ -119,20 +119,25 @@ const Header = () => {
           {/* MAIN NAVIGATION MENU */}
           {/* Desktop navigation menu with active link highlighting */}
           <div className="navigation" ref={menuRef} onClick={toggleMenu}>
-            <ul className="menu flex items-center gap-[2.7rem]">
+            <ul className="menu flex items-center gap-[1.5rem] lg:gap-[2.7rem]">
               {navLinks.map((link, index) => (
                 <li key={index}>
                   <NavLink
                     to={link.path}
                     className={navClass => 
                       navClass.isActive 
-                      // Active link styling (current page)
-                      ? "text-primaryColor text-[16px] leading-7 font-[600]"
-                      // Inactive link styling with hover effect
-                      : "text-textColor text-[16px] leading-7 font-[500] hover:text-primaryColor"
+                      ? "text-primaryColor text-[14px] lg:text-[16px] leading-7 font-[600] whitespace-nowrap"
+                      : "text-textColor text-[14px] lg:text-[16px] leading-7 font-[500] hover:text-primaryColor whitespace-nowrap"
                     }
                   >
-                    {link.display}
+                    {/* Show shorter text on smaller screens */}
+                    <span className="hidden lg:inline">{link.display}</span>
+                    <span className="lg:hidden">
+                      {link.display === 'Find a Trainer' ? 'Trainers' : 
+                       link.display === 'Services' ? 'Services' :
+                       link.display === 'Contact' ? 'Contact' : 
+                       link.display}
+                    </span>
                   </NavLink>
                 </li>
               ))}
@@ -140,72 +145,67 @@ const Header = () => {
           </div>
 
           {/* RIGHT SIDE NAVIGATION (Authentication & User Actions) */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             
             {/* AUTHENTICATED USER SECTION */}
             {/* Show user profile and logout when user is logged in */}
             {token && user ? (
               <>
-                {/* User Profile Picture */}
+                {/* User Profile Picture - Acts as My Profile button on mobile */}
                 {/* Clickable profile image that links to user's profile page */}
                 <div>
                   <Link to={`${role === 'trainer' ? '/trainers/profile/me' : '/users/profile/me'}`}>
                     <figure className="w-[35px] h-[35px] rounded-full cursor-pointer">
                       <img 
                         src={user?.photo} 
-                        className="w-full rounded-full" 
+                        className="w-full rounded-full object-cover" 
                         alt="" 
                       />
                     </figure>
                   </Link>
                 </div>
 
-                {/* My Profile Button */}
-                {/* Role-based navigation - trainers and clients have different profile routes */}
-                <Link to={`${role === 'trainer' ? '/trainers/profile/me' : '/users/profile/me'}`}>
-                  <button className="bg-blue-200 hover:bg-blue-300 py-2 px-6 text-primaryColor font-[600] h-[44px] flex items-center justify-center rounded-[50px]">
+                {/* My Profile Button - Hidden on mobile (< 640px) */}
+                <Link to={`${role === 'trainer' ? '/trainers/profile/me' : '/users/profile/me'}`} className="hidden sm:block">
+                  <button className="bg-blue-200 hover:bg-blue-300 py-2 px-4 lg:px-6 text-primaryColor font-[600] h-[44px] flex items-center justify-center rounded-[50px] text-sm lg:text-base whitespace-nowrap">
                     My Profile
                   </button>
                 </Link>
-      
-                {/* Logout Button */}
-                {/* Handles user logout by clearing localStorage and redirecting */}
+
+                {/* Logout Button - Always shows "Logout" text */}
                 <button
                   onClick={() => {
-                    // Clear authentication data from localStorage
                     localStorage.removeItem("user");
                     localStorage.removeItem("token");
-                    // Redirect to login page (hard refresh to reset app state)
                     window.location.href = "/login";
                   }}
-                  className="bg-red-500 py-2 px-6 text-white font-[600] h-[44px] flex items-center justify-center rounded-[50px]"
+                  className="bg-red-500 hover:bg-red-600 py-2 px-2 sm:px-4 lg:px-6 text-white font-[600] h-[44px] flex items-center justify-center rounded-[50px] text-xs sm:text-sm lg:text-base"
                 >
                   Logout
                 </button>
               </>
             ) : (
               /* UNAUTHENTICATED USER SECTION */
-              /* Show login and signup buttons when user is not logged in */
               <>
-                {/* Login Button */}
+                {/* Login Button - Responsive */}
                 <Link to='/login'>
-                  <button className="bg-primaryColor py-2 px-6 text-white font-[600] h-[44px] flex items-center justify-center rounded-[50px]">
+                  <button className="bg-primaryColor py-2 px-3 sm:px-4 lg:px-6 text-white font-[600] h-[44px] flex items-center justify-center rounded-[50px] text-xs sm:text-sm lg:text-base">
                     Login
                   </button>
                 </Link>
                 
-                {/* Sign Up Button */}
+                {/* Sign Up Button - Responsive */}
                 <Link to='/register'>
-                  <button className="bg-orange-400 py-2 px-6 text-white font-[600] h-[44px] flex items-center justify-center rounded-[50px]">
-                    Sign Up
+                  <button className="bg-orange-400 py-2 px-2 sm:px-4 lg:px-6 text-white font-[600] h-[44px] flex items-center justify-center rounded-[50px] text-xs sm:text-sm lg:text-base">
+                    <span className="hidden sm:inline">Sign Up</span>
+                    <span className="sm:hidden">Join</span>
                   </button>
                 </Link>
               </>
             )}
             
             {/* MOBILE MENU TOGGLE */}
-            {/* Hamburger menu icon - only visible on mobile devices */}
-            <span className="md:hidden" onClick={toggleMenu}>
+            <span className="md:hidden ml-2" onClick={toggleMenu}>
               <BiMenu className="w-6 h-6 cursor-pointer" />
             </span>
           </div>

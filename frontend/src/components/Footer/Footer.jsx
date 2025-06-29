@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-// import logo from '../../assets/images/logo.png';
+import logo from '../../assets/images/trainerhub-logo.png';
 import { RiLinkedinFill } from 'react-icons/ri';
 import { AiFillYoutube, AiFillGithub, AiOutlineInstagram } from 'react-icons/ai';
 
@@ -82,7 +82,11 @@ const Footer = () => {
         <div className="flex justify-between flex-col md:flex-row flex-wrap gap-[30px]">
           <div>
             {/* <img src={logo} alt="" /> */}
-            <div>LOGO HERE</div>
+            
+              <Link to="/" className="-ml-2">
+                <img src={logo} alt="TrainerHub" className="w-40 md:w-48 lg:w-56 h-auto mb-4" />
+              </Link>
+         
             <p className="text-[16px] leading-7 font-[400] text-textColor mt-4">
               Copyright © {year} developed by Kajal Soni.
             </p>
