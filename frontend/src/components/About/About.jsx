@@ -20,16 +20,18 @@ const About = () => {
           <div className="w-full pl-8 lg:w-1/2 xl:w-[670px] order-1 lg:order-2">
             <h2 className="heading">Proud to be one of the nation's best</h2>
             <p className="text_para">
-              For 30 years in a row, U.S. News and World Report has recognized 
-              us as one of the best public hospitals in the Nation and #1 in T
-              exas. Lorem ipsum dolor sit amet consectetur, adipisicing elit. 
-              Quas, nemo?
+            TrainerHub connects you with certified personal trainers to help you achieve your fitness goals. 
+            Whether you're looking to build strength, improve flexibility, or start a new wellness routine, 
+            our platform makes it easy to find the right trainer and book sessions that fit your schedule.
+
             </p>
             <p className="text_para mt-[30px]">
-              Our best is something we strive for each day, caring for our 
-              patients—not looking back at what we accomplished but towards 
-              what we can do tomorrow. Providing the best. Lorem ipsum dolor 
-              sit amet, consectetur adipisicing elit. Aliquid, modi?
+                We believe in making fitness accessible and personalised for 
+                everyone. With secure online booking, real-time scheduling, 
+                and verified reviews, TrainerHub ensures a seamless experience 
+                from your first session to your next milestone. Start your 
+                journey to a healthier, stronger you today!
+
             </p>
             <Link to="/">
               <button className="btn">Learn More</button>
