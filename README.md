@@ -8,7 +8,7 @@ The Personal Training Booking System is a comprehensive web-based platform desig
 ## Features
 
 ### For Clients:
-- **Browse Trainers**: Search and filter trainers based on specialization, location, and availability
+- **Browse Trainers**: Search and filter trainers based on specialisation, location, and availability
 - **Book Sessions**: Schedule training sessions with trainers at convenient times
 - **Secure Payments**: Integrated Stripe payment processing for session bookings
 - **Profile Management**: Update personal details, profile photos, and view booking history
@@ -26,7 +26,7 @@ The Personal Training Booking System is a comprehensive web-based platform desig
 
 ### General Features:
 - **Authentication**: Secure login and registration for clients and trainers with role-based access
-- **Responsive Design**: Optimized for both desktop and mobile devices
+- **Responsive Design**: Optimised for both desktop and mobile devices
 - **Payment Integration**: Stripe Checkout for secure payment processing
 - **Review System**: Complete review and rating system for trainers
 - **Image Upload**: Cloudinary integration for profile photo uploads
@@ -66,7 +66,7 @@ You can explore the platform as either a **Client** or a **Trainer**. Use the de
 
 1. **Browse Trainers:**  
    - Go to "Find a Trainer" to view all available trainers.
-   - Use search and filters to find trainers by specialization.
+   - Use search and filters to find trainers by specialisation.
 
 2. **View Trainer Profiles:**  
    - Click on any trainer card to see detailed profile, qualifications, and reviews.
@@ -132,7 +132,7 @@ You can explore the platform as either a **Client** or a **Trainer**. Use the de
 - **Node.js & Express.js**: For building the REST API
 - **MongoDB**: For database management
 - **Mongoose**: For object data modeling (ODM)
-- **JWT**: For secure authentication and authorization
+- **JWT**: For secure authentication and authorisation
 - **Stripe**: For payment processing
 - **Cloudinary**: For image upload and management
 - **bcrypt**: For password hashing and security
@@ -265,7 +265,7 @@ src/
 - **Authentication Context**: Located in `frontend/src/context/AuthContext.jsx`, manages user authentication and role-based access
 - **Reusable Components**: Components like `TrainerCard`, `ServiceCard`, and `FaqItem` ensure modularity and reusability
 - **Custom Hooks**: `useFetchData` simplifies API calls and state management
-- **Protected Routes**: `ProtectedRoutes.jsx` ensures only authorized users can access specific pages
+- **Protected Routes**: `ProtectedRoutes.jsx` ensures only authorised users can access specific pages
 - **Payment Integration**: Stripe Checkout sessions for secure payment processing
 - **Image Upload**: Cloudinary integration for profile photo management
 - **Review System**: Complete rating and review functionality for trainers
@@ -284,7 +284,7 @@ The application integrates Stripe for secure payment processing:
 - Password hashing using bcrypt
 - Role-based access control (client/trainer)
 - Protected API endpoints with authentication middleware
-- Input validation and sanitization
+- Input validation and sanitisation
 
 ## Future Enhancements
 
