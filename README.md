@@ -33,6 +33,90 @@ The Personal Training Booking System is a comprehensive web-based platform desig
 - **Protected Routes**: Role-based route protection for enhanced security
 - **Real-time Updates**: Dynamic content updates without page refresh
 
+
+## 🧪 How to Test the App Features
+
+You can explore the platform as either a **Client** or a **Trainer**. Use the demo accounts below or register a new user.
+
+### 1. Access the Application
+
+- Open [http://localhost:5173](http://localhost:5173) in your browser after starting both frontend and backend servers.
+
+---
+
+### 2. Login or Register
+
+#### Demo Accounts
+
+- **Client Login:**  
+  - Email: `client1@gmail.com`  
+  - Password: `test`
+- **Trainer Login:**  
+  - Email: `trainer1@gmail.com`  
+  - Password: `test`
+
+#### Or Register a New Account
+
+- Click **Sign Up** and choose either "Client" or "Trainer" role.
+- Fill in the required details and submit the form.
+
+---
+
+### 3. Client Features to Test
+
+1. **Browse Trainers:**  
+   - Go to "Find a Trainer" to view all available trainers.
+   - Use search and filters to find trainers by specialization.
+
+2. **View Trainer Profiles:**  
+   - Click on any trainer card to see detailed profile, qualifications, and reviews.
+
+3. **Book a Session:**  
+   - On a trainer’s profile, select a time slot and date.
+   - Click "Book Now" and complete the Stripe payment process.
+
+4. **View & Manage Bookings:**  
+   - Go to "My Profile" > "My Bookings" to see all your session bookings.
+
+5. **Leave Feedback:**  
+   - After booking, go to a trainer’s profile and submit a review and rating.
+
+6. **Edit Profile:**  
+   - Update your personal info and profile photo in "Profile Settings".
+
+7. **Logout:**  
+   - Use the logout button in the header or sidebar.
+
+---
+
+### 4. Trainer Features to Test
+
+1. **Login as Trainer** (use demo or register as trainer).
+
+2. **View Dashboard:**  
+   - See an overview of your profile, ratings, and certifications.
+
+3. **Manage Bookings:**  
+   - Go to the "Bookings" tab to view all client appointments.
+
+4. **Edit Profile:**  
+   - Update your qualifications, experiences, time slots, pricing, and profile photo.
+
+5. **View Feedback:**  
+   - Check client reviews and ratings in the "Feedback" tab.
+
+6. **Logout:**  
+   - Use the logout button in the header or sidebar.
+
+---
+
+### 5. Additional Tips
+
+- You can register multiple clients or trainers to test interactions.
+- Try deleting your account or updating your profile photo to test those features.
+- All payments are in test mode using Stripe. You can use **Card Number:** `4242 4242 4242 4242` and any **Expiry Date:** and **CVC:** value to test the payment
+
+
 ## Tech Stack
 
 ### Frontend:
