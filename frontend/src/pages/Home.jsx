@@ -35,9 +35,9 @@ const Home = () => {
                     We help you achieve your fitness goals.
                   </h1>
                   <p className="text_para">
-                    Lorem ipsum dolor sit amet consectetur, adipisicing elit. Natus quaerat cumque 
-                    fugit, perspiciatis cum nemo aperiam, aut quia earum amet architecto, modi 
-                    odio. Soluta unde ducimus perferendis?
+                    TrainerHub makes it easy to connect with certified trainers and book sessions that fit your lifestyle. 
+                    Discover the right coach for your goals, manage your schedule, and track your progress—all in one place. 
+                    Start your fitness journey today and experience a seamless way to achieve results!
                   </p>
                   <Link to="/trainers">
                     <button className="btn">Request an Consultation</button>
